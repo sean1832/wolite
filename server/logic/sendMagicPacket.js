@@ -11,7 +11,7 @@ function sendMagicPacket(mac, callback) {
       console.error("Error sending magic packet:", error);
       return callback(error);
     }
-    callback(null, `Magic packet sent to ${mac}`);
+    callback(null, `Magic packet sent.`);
   });
 }
 
