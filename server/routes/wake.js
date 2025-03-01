@@ -41,7 +41,7 @@ router.get("/", (req, res) => {
         .send("Error sending magic packet. Check the logs for more details.");
     }
     LogToFile(clientIp, result);
-    res.cookie("mac", mac, { maxAge: 2_592_000_000 }); // 30 days
+    res.cookie("mac", mac, { maxAge: Number(process.env.COOKIE_LIFETIME) });
     res.status(200).type("text/plain").send(result);
   });
 });
