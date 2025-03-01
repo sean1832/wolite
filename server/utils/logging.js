@@ -1,6 +1,6 @@
 require("dotenv").config(); // Load environment variables
 const fs = require("fs");
-const log_dir = __dirname + "./../../logs";
+const log_dir = __dirname + "/../../logs";
 if (!fs.existsSync(log_dir)) {
   fs.mkdirSync(log_dir);
 }
