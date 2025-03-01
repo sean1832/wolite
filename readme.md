@@ -1,5 +1,7 @@
 # WOLITE
 
+![favicon](/public//icons//favicon.png)
+
 A minimal Wake-on-LAN server with a web interface built with **Alpine.js** (frontend) and **Node.js** (backend).
 
 ## Installation
