@@ -10,7 +10,7 @@ A minimal Wake-on-LAN server with a web interface built with **Alpine.js** (fron
 
 ```sh
 # Clone the repository
-git clone https://github.com/sean1832/wolite.git && cd walite
+git clone https://github.com/sean1832/wolite.git && cd wolite
 
 # Install dependencies
 npm install
