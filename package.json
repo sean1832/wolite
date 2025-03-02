@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "env": "node initEnv.js",
+    "setup": "node setup.js",
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
