@@ -1,13 +1,13 @@
 {
   "name": "wolite",
   "version": "0.1.0",
-  "description": "![MOCKUP](/docs/images/WOLITE_mockup.png)",
+  "description": "A minimal Wake-on-LAN server with a web interface",
   "main": "app.js",
   "directories": {
     "doc": "docs"
   },
-  "devDependencies": {},
   "scripts": {
+    "setup": "node setup.js",
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,6 +26,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
+    "otpauth": "^9.3.6",
     "wol": "^1.0.7"
   }
 }
