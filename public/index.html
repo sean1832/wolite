@@ -3,8 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-
+    <link rel="stylesheet" href="style.css" />
     <!-- Alpine Plugins -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
 
@@ -25,7 +24,7 @@
     <title>WOLITE</title>
     <link rel="icon" type="image/png" href="icons/favicon.png" />
   </head>
-  <body class="bg-black text-white">
+  <body class="bg-primary text-secondary">
     <div class="flex flex-col h-screen justify-center lg:space-y-8" x-data="{ output: '' }">
       <header class="text-center p-3">
         <h1 class="text-4xl sm:text-5xl xl:text-7xl">WAKE ON LAN</h1>
@@ -42,14 +41,14 @@
                 :type="isHidden ? 'password' : 'text'"
                 id="mac"
                 name="mac"
-                class="bg-gray-900 text-white p-2 rounded w-full pr-10"
+                class="bg-primary text-secondary p-2 rounded w-full pr-10 border border-secondary"
                 placeholder="00-00-00-00-00-00"
                 x-mask="**-**-**-**-**-**"
                 :value="$store.cookies.getCookie('mac')"
               />
               <button
                 type="button"
-                class="absolute inset-y-0 right-2 flex items-center px-2 text-gray-400 hover:text-white cursor-pointer"
+                class="absolute inset-y-0 right-2 flex items-center px-2 text-primary hover:text-white cursor-pointer"
                 @click="isHidden = !isHidden"
               >
                 <img
@@ -84,15 +83,15 @@
                 .then(data => output = data)
                 .catch(err => console.error(err))
             "
-            class="bg-gray-100 hover:bg-white text-black font-bold py-2 px-4 rounded w-full cursor-pointer"
+            class="bg-secondary hover:bg-white text-primary font-bold py-2 px-4 rounded w-full cursor-pointer"
           >
             AWAKE
           </button>
 
           <!-- Display output -->
-          <template x-if="output">
-            <pre class="bg-gray-900 p-4 rounded w-full" x-text="output"></pre>
-          </template>
+          <div class="w-full text-secondary min-h-[3rem]">
+            <pre x-text="output" class="text-wrap"></pre>
+          </div>
         </div>
       </div>
     </div>
