@@ -58,6 +58,7 @@ async function main() {
     let allowedOrigins = await askQuestion("Enter the allowed origins (::1): ");
     allowedOrigins = allowedOrigins.split(",").map((origin) => origin.trim());
     allowedOrigins.push("::1");
+    allowedOrigins.push("127.0.0.1");
     // make sure no empty string
     allowedOrigins = allowedOrigins.filter((origin) => origin.length > 0);
 
