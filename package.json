@@ -1,4 +1,26 @@
 {
+  "name": "wolite",
+  "version": "0.1.0",
+  "description": "![MOCKUP](/docs/images/WOLITE_mockup.png)",
+  "main": "app.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sean1832/wolite.git"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/sean1832/wolite/issues"
+  },
+  "homepage": "https://github.com/sean1832/wolite#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",

@@ -49,5 +49,5 @@ app.use("/auth", authRouter);
 app.use("/api/wake", wakeRouter);
 
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  console.log(`Server listening at http://localhost:${port}`);
 });
