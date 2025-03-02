@@ -15,26 +15,11 @@ git clone https://github.com/sean1832/wolite.git && cd wolite
 # Install dependencies
 npm install
 
-# Generate a password hash
-node generateHash.js
-```
+# Set up the environment variables (.env file)
+npm run setup
 
-Copy the generated hash.
-
-```sh
-# Rename the example environment file
-mv .env.example .env
-```
-
-Edit `.env` and set:
-
-```env
-AUTH_PASSWORD_HASH=<your-generated-hash>
-```
-
-```sh
 # Start the server
-node app.js
+npm run start
 ```
 
 Access the web interface at:  
@@ -58,20 +43,11 @@ Access the web interface at:
 #### PM2 Commands
 
 ```sh
-# Start the process
-pm2 start app.js
+# Start the server with pm2 and name the process
+pm2 start app.js --name wolite
 
-# Stop the process
-pm2 stop app.js
-
-# Restart the process
-pm2 restart app.js
-
-# View logs
-pm2 logs app.js
-
-# List all processes
-pm2 list
+pm2 save # Save the process list
+pm2 startup # set up the startup script
 ```
 
 📄See PM2 doc [here](https://pm2.keymetrics.io/docs/usage/process-management/)
