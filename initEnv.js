@@ -1,6 +1,7 @@
 const readline = require("readline");
 const bcrypt = require("bcrypt");
 const otp = require("otpauth");
+const getOTP = require("./server/utils/otp");
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -30,18 +31,6 @@ async function generateRandomChar(length) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return result;
-}
-
-async function getOTP() {
-  let totp = new otp.TOTP({
-    issuer: "WOLITE",
-    label: "WOLITE:SECRET",
-    algorithm: "SHA256",
-    digits: 6,
-    period: 30,
-    secret: new otp.Secret({ size: 36 }),
-  });
-  return totp.toString();
 }
 
 /**
@@ -77,14 +66,25 @@ async function main() {
 
     const hashedPassword = await hashPassword(password);
     const sessionSecret = await generateRandomChar(32);
-    const otpSecret = enableOTP === "true" ? await getOTP() : "N/A";
+
+    let otpSecret;
+    let otpURI;
+    if (enableOTP === "true") {
+      otpSecret = new otp.Secret({ size: 20 }).base32;
+      const otpInstance = getOTP(otpSecret);
+      otpURI = otpInstance.toString();
+    } else {
+      otpSecret = "N/A";
+    }
 
     console.log("\nEnvironment Variables:");
     console.log(`AUTH_USER="${username}"`);
     console.log(`AUTH_PASSWORD_HASH="${hashedPassword}"`);
     console.log(`SESSION_SECRET="${sessionSecret}"`);
     console.log(`ENABLE_OTP=${enableOTP}`);
+    console.log(`OTP_URI="${otpURI}"`);
     console.log(`OTP_SECRET="${otpSecret}"`);
+
     console.log(`PORT=${port}`);
     console.log(`ENABLE_LOG=${enableLog}`);
     console.log(`ENABLE_IP_FILTER=true`);
@@ -103,7 +103,9 @@ async function main() {
 
       fs.appendFileSync(".env", `# (optional) OTP configs\n`);
       fs.appendFileSync(".env", `ENABLE_OTP=${enableOTP}\n`);
-      fs.appendFileSync(".env", `OTP_SECRET="${otpSecret}"\n\n`);
+      fs.appendFileSync(".env", `OTP_SECRET="${otpSecret}"\n`);
+      fs.appendFileSync(".env", `# (Optional) You can add this URI to your OTP app\n`);
+      fs.appendFileSync(".env", `OTP_URI="${otpURI}"\n\n`);
 
       fs.appendFileSync(".env", `# Server configs\n`);
       fs.appendFileSync(".env", `PORT=${port}\n`);

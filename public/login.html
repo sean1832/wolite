@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <!-- Alpine Plugins -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <title>WOLITE Login</title>
     <link rel="icon" type="image/png" href="icons/favicon.png" />
@@ -52,6 +54,9 @@
             />
           </div>
 
+          <!-- TOTP field will be injected here if enabled in server -->
+          <div class="w-full relative" id="totp-container"></div>
+
           <!-- Submit Button -->
           <button
             type="submit"
@@ -62,5 +67,25 @@
         </div>
       </form>
     </div>
+
+    <!-- JavaScript -->
+    <script>
+      // Fetch the configuration from the backend
+      fetch("/auth/config")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.enableOtp) {
+            // Create the TOTP input field
+            const totpContainer = document.getElementById("totp-container");
+            totpContainer.innerHTML = `
+              <div class="w-full relative">
+                <label for="totp" class="block">TOTP Code:</label>
+                <input x-mask="999999" id="totp" name="totp" class="bg-gray-900 text-white p-2 rounded w-full" placeholder="000000" />
+              </div>
+            `;
+          }
+        })
+        .catch((error) => console.error("Error fetching configuration:", error));
+    </script>
   </body>
 </html>

@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const wakeRouter = require("./server/routes/wake");
 const authRouter = require("./server/routes/auth");
 const sessionRouter = require("./server/routes/session");
+const authConfigRouter = require("./server/routes/authConfig");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -44,6 +45,8 @@ app.use("/api/session-status", sessionRouter);
 
 // Mount the authentication routes at /auth
 app.use("/auth", authRouter);
+
+app.use("/auth/config", authConfigRouter);
 
 // Mount the wake route (protected) at /api/wake
 app.use("/api/wake", wakeRouter);
