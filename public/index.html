@@ -24,14 +24,13 @@
     <title>WOLITE</title>
     <link rel="icon" type="image/png" href="icons/favicon.png" />
   </head>
-  <body class="bg-primary text-secondary">
+  <body class="bg-primary text-secondary font-inter">
     <div class="flex flex-col h-screen justify-center lg:space-y-8" x-data="{ output: '' }">
-      <header class="text-center p-3">
-        <h1 class="text-4xl sm:text-5xl xl:text-7xl">WAKE ON LAN</h1>
-      </header>
-
       <!-- Container with x-data to ensure Alpine is active -->
       <div class="w-full md:w-1/2 mx-auto p-4" x-data>
+        <header class="py-3 text-center">
+          <h1 class="text-7xl sm:text-7xl xl:text-9xl font-doto">WOLITE</h1>
+        </header>
         <div class="flex flex-col items-center space-y-4">
           <!-- Input container with local state for toggling visibility -->
           <div class="w-full relative" x-data="{ isHidden: false }">
@@ -96,8 +95,8 @@
       </div>
     </div>
 
-    <footer class="fixed bottom-0 left-0 right-0 text-center p-3 z-50 text-gray-500">
-      <p class="text-sm hover:underline">
+    <footer class="fixed bottom-0 left-0 right-0 text-center p-3 z-50 text-muted">
+      <p class="text-sm hover:underline hover:text-secondary">
         <a href="https://github.com/sean1832/wolite">WOLITE v0.1.0</a>
       </p>
       <p class="text-sm">© 2025 WOLITE. All rights reserved.</p>
