@@ -11,7 +11,7 @@ function basicIpAuth(req, res, next) {
   }
 
   // Check if the client's IP is in the allowedIPs list
-  if (!JSON.parse(process.env.ALLOWED_IPS).includes(clientIp)) {
+  if (!JSON.parse(process.env.ALLOWED_ORIGINS).includes(clientIp)) {
     console.log(`Access denied for IP: ${clientIp}`);
     LogToFile(clientIp, "Access denied. IP not allowed.");
     return res.status(403).send("Access denied.");
