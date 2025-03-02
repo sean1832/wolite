@@ -64,9 +64,20 @@
 
           <!-- Button that triggers wake on LAN -->
           <button
-            x-on:click="fetch('/wake?mac=' + encodeURIComponent(document.getElementById('mac').value))
-            .then(response => response.text())
-            .then(data => output = data)"
+            @click="
+              fetch('/api/wake?mac=' + encodeURIComponent(document.getElementById('mac').value))
+                .then(response => {
+                  // If the response URL is /auth, then redirected to the login page.
+                  if (response.url.endsWith('/auth')) {
+                    window.location.href = '/auth';
+                    // Stop further processing.
+                    return Promise.reject('Redirecting to auth page');
+                  }
+                  return response.text();
+                })
+                .then(data => output = data)
+                .catch(err => console.error(err))
+            "
             class="bg-gray-100 hover:bg-white text-black font-bold py-2 px-4 rounded w-full cursor-pointer"
           >
             AWAKE
@@ -86,5 +97,18 @@
       </p>
       <p class="text-sm">© 2025 WOLITE. All rights reserved.</p>
     </footer>
+
+    <script>
+      // This script could run on index.html to verify session status
+      fetch("/api/session-status")
+        .then((response) => response.json())
+        .then((data) => {
+          if (!data.authenticated) {
+            // force a redirect to /auth if not authenticated
+            window.location.href = "/auth";
+          }
+        })
+        .catch((err) => console.error("Session check failed:", err));
+    </script>
   </body>
 </html>
