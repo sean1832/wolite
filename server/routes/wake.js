@@ -1,20 +1,26 @@
 const express = require("express");
 const router = express.Router();
-
-const basicPasswordAuth = require("../middleware/basicPasswordAuth");
 const basicIpFilter = require("../middleware/basicIpFilter");
 const sendMagicPacket = require("../logic/sendMagicPacket");
 const LogToFile = require("../utils/logging");
 
-// Conditionally apply IP filter if enabled
+// Custom middleware to check if the user is authenticated
+const customAuth = (req, res, next) => {
+  if (req.session.isAuthenticated) {
+    return next();
+  }
+  res.redirect("/auth");
+};
+
+// Optionally apply IP filter if enabled
 if (process.env.ENABLE_IP_FILTER === "true") {
   router.use(basicIpFilter);
 }
 
-// Apply basic password authentication middleware
-router.use(basicPasswordAuth);
+// Apply the session authentication middleware
+router.use(customAuth);
 
-// Define the /wake GET endpoint
+// GET /wake endpoint
 router.get("/", (req, res) => {
   const clientIp = req.ip;
   const mac = req.query.mac;
@@ -31,7 +37,7 @@ router.get("/", (req, res) => {
     return res.status(400).type("text/plain").send("Invalid MAC address format.");
   }
 
-  // Call the magic packet sending function
+  // Send the magic packet
   sendMagicPacket(mac, (error, result) => {
     if (error) {
       LogToFile(clientIp, `Error sending magic packet: ${error}`);
