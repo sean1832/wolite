@@ -329,14 +329,8 @@
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
-  .border-\[\#c5c5c5\] {
-    border-color: #c5c5c5;
-  }
   .border-secondary {
     border-color: var(--color-secondary);
-  }
-  .bg-\[\#060606\] {
-    background-color: #060606;
   }
   .bg-gray-100 {
     background-color: var(--color-gray-100);
@@ -403,9 +397,6 @@
   .text-wrap {
     text-wrap: wrap;
   }
-  .text-\[\#c5c5c5\] {
-    color: #c5c5c5;
-  }
   .text-black {
     color: var(--color-black);
   }
@@ -469,13 +460,6 @@
   .ease-in-out {
     --tw-ease: var(--ease-in-out);
     transition-timing-function: var(--ease-in-out);
-  }
-  .hover\:bg-gray-50 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-gray-50);
-      }
-    }
   }
   .hover\:bg-white {
     &:hover {
