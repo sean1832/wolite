@@ -10,7 +10,7 @@ function sendMagicPacket(mac, callback) {
   wol.wake(mac, function (error) {
     if (error) {
       LogConsole("error", `Error sending magic packet: ${error}`);
-      return callback(error);
+      return callback("Error sending magic packet. Check the logs for more details.");
     }
     callback(null, `Magic packet sent.`);
   });
