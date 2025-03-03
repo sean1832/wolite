@@ -29,5 +29,5 @@ jobs:
 
       - name: push image to docker hub
         run: |
-          docker push sean1832/wolite:latest
           docker push sean1832/wolite:${{ env.LATEST_TAG }}
+          docker push sean1832/wolite:latest
