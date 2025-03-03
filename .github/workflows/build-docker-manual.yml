@@ -1,7 +1,6 @@
 name: Build & Publish to Docker Hub Manually
 
-on:
-  [workflow_dispatch]
+on: [workflow_dispatch]
 
 jobs:
   publish_image:
@@ -13,8 +12,15 @@ jobs:
       - name: Build latest image
         run: docker build -t sean1832/wolite:latest .
 
+      - name: Get Latest Tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+          echo "LATEST_TAG=${latest_tag}"
+          echo "LATEST_TAG=${latest_tag}" >> $GITHUB_ENV
+
       - name: Build versioned image
-        run: docker build -t sean1832/wolite:${{ github.event.release.tag_name }} .
+        run: docker build -t sean1832/wolite:${{ env.LATEST_TAG }} .
 
       - name: login to docker hub
         run: docker login -u sean1832 -p ${{ secrets.DOCKERHUB_TOKEN }}
