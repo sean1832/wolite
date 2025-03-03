@@ -19,8 +19,8 @@ if [ "$ENABLE_OTP" = "true" ]; then
 fi
 
 # only set the allowed origins if it is provided
-if [ "$ALLOWED_ORIGINS" ]; then
-  ALLOWED_ORIGINS="--allowed-origins $ALLOWED_ORIGINS"
+if [ "$ALLOWED_IPS" ]; then
+  ALLOWED_IPS_FLAG="--allowed-origins $ALLOWED_IPS"
 fi
 
 
@@ -29,7 +29,7 @@ node setup.js \
   --username $USERNAME \
   --password $PASSWORD \
   $OTP_FLAG \
-  $ALLOWED_ORIGINS
+  $ALLOWED_IPS_FLAG
 
 
 # Execute the CMD from the Dockerfile (i.e., "npm run start")
