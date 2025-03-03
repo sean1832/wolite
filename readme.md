@@ -34,7 +34,7 @@ Access the web interface at:
 npm install -g pm2
 
 # Start the server with pm2
-pm2 start app.js
+pm2 start app.js --name wolite
 ```
 
 Access the web interface at:  
