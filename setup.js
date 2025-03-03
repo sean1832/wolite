@@ -1,11 +1,14 @@
 #!/usr/bin/env node
+
 const fs = require("fs");
 const readline = require("readline");
 const bcrypt = require("bcrypt");
 const otp = require("otpauth");
 const createOTP = require("./server/utils/otp");
 
-// Simple CLI argument parser for --key value or boolean flags.
+/**
+ * Parse CLI arguments in the form --key value or boolean flags.
+ */
 function parseArgs() {
   const args = process.argv.slice(2);
   const options = {};
@@ -32,7 +35,9 @@ function parseArgs() {
   return options;
 }
 
-// Utility: Generate a random string of the given length.
+/**
+ * Generate a random string of the given length.
+ */
 function generateRandomChar(length) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+_&^%$!~";
   let result = "";
@@ -42,7 +47,58 @@ function generateRandomChar(length) {
   return result;
 }
 
-// Write the .env file using the provided config object.
+/**
+ * Ensure allowed origins are processed into an array with default values.
+ */
+function processAllowedOrigins(originsInput) {
+  if (!originsInput || (typeof originsInput === "string" && originsInput.trim() === "")) {
+    return ["::1", "127.0.0.1"];
+  }
+  let origins = Array.isArray(originsInput)
+    ? originsInput
+    : originsInput
+        .split(",")
+        .map((o) => o.trim())
+        .filter((o) => o);
+  if (!origins.includes("::1")) origins.push("::1");
+  if (!origins.includes("127.0.0.1")) origins.push("127.0.0.1");
+  return origins;
+}
+
+/**
+ * Build the configuration object based on provided inputs.
+ * It handles password hashing, OTP generation, session secret, etc.
+ */
+async function buildConfig(input) {
+  const hashedPassword = await bcrypt.hash(input.password, 10);
+  const sessionSecret = generateRandomChar(32);
+
+  let otpSecret, otpURI;
+  if (input.enableOTP) {
+    otpSecret = new otp.Secret({ size: 20 }).base32;
+    const totp = createOTP(otpSecret);
+    otpURI = totp.toString();
+  } else {
+    otpSecret = "N/A";
+    otpURI = "";
+  }
+
+  return {
+    username: input.username,
+    hashedPassword,
+    sessionSecret,
+    enableOTP: input.enableOTP,
+    otpSecret,
+    otpURI,
+    port: input.port || "3000",
+    allowedOrigins: processAllowedOrigins(input.allowedOrigins),
+    enableLog: input.enableLog || false,
+  };
+}
+
+/**
+ * Write the .env file using the provided configuration.
+ */
 function writeEnvFile(config) {
   const envContent = `# Security configs
 AUTH_USER="${config.username}"
@@ -65,92 +121,67 @@ COOKIE_LIFETIME=604800000
   console.log("\n.env file generated successfully.");
 }
 
-// Interactive mode using readline.
+/**
+ * Interactive mode: uses readline to prompt the user.
+ */
 async function interactiveMode() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
     terminal: true,
   });
-  const askQuestion = (query) =>
-    new Promise((resolve) => rl.question(query, (answer) => resolve(answer)));
+
+  const askQuestion = (query) => new Promise((resolve) => rl.question(query, resolve));
 
   try {
-    let username = await askQuestion("Enter your username: ");
+    const username = await askQuestion("Enter your username: ");
     if (!username) {
       console.error("Username cannot be empty.");
       rl.close();
       process.exit(1);
     }
 
-    let password = await askQuestion("Enter your password: ");
+    const password = await askQuestion("Enter your password: ");
     if (!password) {
       console.error("Password cannot be empty.");
       rl.close();
       process.exit(1);
     }
 
-    let enableOTP = await askQuestion("Enable OTP? (yes/[no]): ");
-    enableOTP = enableOTP.trim().toLowerCase() === "yes" ? true : false;
+    const otpAnswer = await askQuestion("Enable OTP? (yes/[no]): ");
+    const enableOTP = otpAnswer.trim().toLowerCase() === "yes";
 
-    let port = await askQuestion("Enter the port number (3000): ");
-    port = port || "3000";
+    const port = (await askQuestion("Enter the port number (3000): ")) || "3000";
 
-    let allowedOrigins = await askQuestion(
+    const originsAnswer = await askQuestion(
       "Enter the allowed origins (comma separated, default: ::1,127.0.0.1): "
     );
-    if (allowedOrigins.trim() === "") {
-      allowedOrigins = ["::1", "127.0.0.1"];
-    } else {
-      allowedOrigins = allowedOrigins.split(",").map((origin) => origin.trim());
-      // Ensure defaults are present.
-      if (!allowedOrigins.includes("::1")) allowedOrigins.push("::1");
-      if (!allowedOrigins.includes("127.0.0.1")) allowedOrigins.push("127.0.0.1");
-      // Remove empty entries.
-      allowedOrigins = allowedOrigins.filter((origin) => origin.length > 0);
-    }
 
-    let enableLog = await askQuestion("Enable logging? (yes/[no]): ");
-    enableLog = enableLog.trim().toLowerCase() === "yes" ? true : false;
+    const enableLogAnswer = await askQuestion("Enable logging? (yes/[no]): ");
+    const enableLog = enableLogAnswer.trim().toLowerCase() === "yes";
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const sessionSecret = generateRandomChar(32);
+    const configInput = {
+      username,
+      password,
+      enableOTP,
+      port,
+      allowedOrigins: originsAnswer,
+      enableLog,
+    };
 
-    let otpSecret, otpURI;
-    if (enableOTP) {
-      otpSecret = new otp.Secret({ size: 20 }).base32;
-      const totp = createOTP(otpSecret);
-      otpURI = totp.toString();
-    } else {
-      otpSecret = "N/A";
-      otpURI = "";
-    }
+    const config = await buildConfig(configInput);
 
-    // Ask user if they want to write the .env file.
-    let writeEnv = await askQuestion("\nSave to .env file? ([yes]/no): ");
-    if (writeEnv.trim().toLowerCase() === "no") {
+    const writeEnvAnswer = await askQuestion("\nSave to .env file? ([yes]/no): ");
+    if (writeEnvAnswer.trim().toLowerCase() === "no") {
       console.log("Not writing .env file. Exiting.");
       rl.close();
       process.exit(0);
     }
 
-    const config = {
-      username,
-      hashedPassword,
-      sessionSecret,
-      enableOTP,
-      otpSecret,
-      otpURI,
-      port,
-      allowedOrigins,
-      enableLog,
-    };
-
     writeEnvFile(config);
 
     console.log("\nEnvironment variables have been set.");
-    console.log("You can now run the server with the following command:");
-    console.log("\nnpm run start\n");
+    console.log("You can now run the server with:\n\nnpm run start\n");
     rl.close();
     process.exit(0);
   } catch (error) {
@@ -160,9 +191,10 @@ async function interactiveMode() {
   }
 }
 
-// CLI mode (non-interactive) that uses command-line parameters.
+/**
+ * CLI mode: uses command-line arguments.
+ */
 async function cliMode(options) {
-  // Show usage help if requested.
   if (options.help || options.h) {
     console.log(`Usage: setup_cli.js --username <username> --password <password> [options]
 Options:
@@ -177,7 +209,6 @@ Options:
     process.exit(0);
   }
 
-  // Validate required parameters.
   const username = options.username || options.u;
   const password = options.password || options.p;
   if (!username) {
@@ -189,54 +220,29 @@ Options:
     process.exit(1);
   }
 
-  const enableOTP = options["enable-otp"] || false;
-  const port = options.port || "3000";
-  let allowedOrigins = options["allowed-origins"]
-    ? options["allowed-origins"].split(",").map((origin) => origin.trim())
-    : [];
-  allowedOrigins.push("::1");
-  allowedOrigins.push("127.0.0.1");
-  allowedOrigins = allowedOrigins.filter((origin) => origin.length > 0);
-  const enableLog = options["enable-log"] || false;
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const sessionSecret = generateRandomChar(32);
-
-  let otpSecret, otpURI;
-  if (enableOTP) {
-    otpSecret = new otp.Secret({ size: 20 }).base32;
-    const totp = createOTP(otpSecret);
-    otpURI = totp.toString();
-  } else {
-    otpSecret = "N/A";
-    otpURI = "";
-  }
-
-  const config = {
+  const configInput = {
     username,
-    hashedPassword,
-    sessionSecret,
-    enableOTP,
-    otpSecret,
-    otpURI,
-    port,
-    allowedOrigins,
-    enableLog,
+    password,
+    enableOTP: options["enable-otp"] || false,
+    port: options.port || "3000",
+    allowedOrigins: options["allowed-origins"] || "",
+    enableLog: options["enable-log"] || false,
   };
 
+  const config = await buildConfig(configInput);
   writeEnvFile(config);
 
   console.log("\nEnvironment variables have been set.");
-  console.log("You can now run the server with the following command:");
-  console.log("\nnpm run start\n");
+  console.log("You can now run the server with:\n\nnpm run start\n");
   process.exit(0);
 }
 
-// Main: choose interactive or CLI mode based on arguments.
+/**
+ * Main entry point: decide between interactive and CLI mode.
+ */
 async function main() {
   const options = parseArgs();
   if (process.argv.slice(2).length === 0) {
-    // No arguments passed, use interactive Q&A mode.
     await interactiveMode();
   } else {
     await cliMode(options);
