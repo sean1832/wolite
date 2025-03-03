@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
-const getOTP = require("../utils/otp");
+const createOTP = require("../utils/otp");
 
 const router = express.Router();
 
@@ -28,7 +28,7 @@ router.post("/", (req, res) => {
             if (process.env.OTP_SECRET === "N/A" || !process.env.OTP_SECRET) {
               return res.redirect("/auth?error=OTP%20is%20enabled%20but%20not%20configured.");
             }
-            const totpInstance = getOTP(process.env.OTP_SECRET);
+            const totpInstance = createOTP(process.env.OTP_SECRET);
             const delta = totpInstance.validate({ token: totp, window: 1 });
             if (delta === null) {
               return res.redirect("/auth?error=Invalid%20OTP.");

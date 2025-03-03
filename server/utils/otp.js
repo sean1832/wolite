@@ -1,9 +1,9 @@
 const otp = require("otpauth");
 
-function getOTP(secret) {
+function createOTP(secret) {
   let totp = new otp.TOTP({
     issuer: "WOLITE",
-    label: "WOLITE:SECRET",
+    label: "WOLITE",
     algorithm: "SHA256",
     digits: 6,
     period: 30,
@@ -12,4 +12,4 @@ function getOTP(secret) {
   return totp;
 }
 
-module.exports = getOTP;
+module.exports = createOTP;
