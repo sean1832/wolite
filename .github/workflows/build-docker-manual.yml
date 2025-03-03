@@ -1,8 +1,6 @@
-name: Build & Publish to Docker Hub
+name: Build & Publish to Docker Hub Manually
 
-on:
-  release:
-    types: [published]
+on: [workflow_dispatch]
 
 jobs:
   publish_image:
