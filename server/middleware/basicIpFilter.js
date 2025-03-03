@@ -11,11 +11,23 @@ function basicIpAuth(req, res, next) {
     clientIp = clientIp.substring(7);
   }
 
-  const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+  let allowedOrigins;
+  try {
+    allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+  } catch (error) {
+    LogConsole(
+      "error",
+      `Error parsing ALLOWED_ORIGINS: ${error}; ALLOWED_ORIGINS: ${process.env.ALLOWED_ORIGINS}`,
+      clientIp
+    );
+    return res
+      .status(500)
+      .send(GetErrorPage(500, "Internal Server Error. Check the logs for more details."));
+  }
 
   // If "*" is present, allow all IPs.
-  if (allowedOrigins.includes("*")) {
-    LogConsole("info", "IP allowed (all IPs permitted due to wildcard '*').", clientIp);
+  if (allowedOrigins.includes("ANY")) {
+    LogConsole("info", "IP allowed (all IPs permitted 'ANY').", clientIp);
     return next();
   }
 
