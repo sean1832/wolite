@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const session = require("express-session");
 const bodyParser = require("body-parser");
+const package = require("./package.json");
 
 // Import the routes
 const wakeRouter = require("./server/routes/wake");
@@ -39,7 +40,7 @@ app.get("/", (req, res) => {
   }
 
   versionData = {
-    version: process.env.npm_package_version,
+    version: package.version,
   };
 
   // Serve the main application page if authenticated
