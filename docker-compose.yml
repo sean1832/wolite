@@ -1,0 +1,14 @@
+version: "3"
+services:
+  wolite:
+    image: sean1832/wolite:latest
+    container_name: wolite
+    ports:
+      - "3000:3000"
+    environment:
+      - USERNAME=your-username # required
+      - PASSWORD=your-password # required
+      # - ENABLE_OTP=true
+      # - ALLOWED_ORIGINS=yourip1,yourip2
+    volumes:
+      - ./.env:/usr/wolite/.env
