@@ -99,8 +99,7 @@ async function buildConfig(input) {
  * Write the .env file using the provided configuration.
  */
 function writeEnvFile(config) {
-  const envContent =
-    `# Security configs
+  const envContent = `# Security configs
 AUTH_USER="${config.username}"
 AUTH_PASSWORD_HASH="${config.hashedPassword}"
 SESSION_SECRET="${config.sessionSecret}"
@@ -113,8 +112,7 @@ OTP_URI="${config.otpURI}" # OTP URI for QR code
 
 # Server configs
 PORT=${config.port}
-ALLOWED_ORIGINS=${JSON.stringify(config.allowedOrigins)} # add ` *
-    ` to allow all origins
+ALLOWED_ORIGINS=${JSON.stringify(config.allowedOrigins)} # add "*" to allow all origins
 COOKIE_LIFETIME=604800000 # 7 days in milliseconds
 `;
   fs.writeFileSync(".env", envContent);
