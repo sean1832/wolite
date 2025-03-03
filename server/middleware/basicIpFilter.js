@@ -1,3 +1,4 @@
+const GetErrorPage = require("../utils/error");
 const LogConsole = require("../utils/logging");
 require("dotenv").config();
 
@@ -21,7 +22,7 @@ function basicIpAuth(req, res, next) {
   // Check if the client's IP is in the allowedIPs list
   if (!allowedOrigins.includes(clientIp)) {
     LogConsole("warn", "Access denied. IP not allowed.", clientIp);
-    return res.status(403).send("Access denied.");
+    return res.status(403).send(GetErrorPage(403, "Access denied. IP not allowed."));
   }
   LogConsole("info", "IP allowed.", clientIp);
   next();
