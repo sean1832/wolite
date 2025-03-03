@@ -112,7 +112,7 @@ OTP_URI="${config.otpURI}" # OTP URI for QR code
 
 # Server configs
 PORT=${config.port}
-ALLOWED_ORIGINS=${JSON.stringify(config.allowedOrigins)} # add "*" to allow all origins
+ALLOWED_ORIGINS=${JSON.stringify(config.allowedOrigins)} # add "ANY" to allow all origins
 COOKIE_LIFETIME=604800000 # 7 days in milliseconds
 `;
   fs.writeFileSync(".env", envContent);
@@ -196,7 +196,7 @@ Options:
   --password         Required. Plain text password (will be hashed).
   --enable-otp       Optional. Include this flag to enable OTP.
   --port             Optional. Server port number (default: 3000).
-  --allowed-origins  Optional. Comma separated list of allowed origins. '*' for any origin. (default: "::1,127.0.0.1").
+  --allowed-origins  Optional. Comma separated list of allowed origins. 'ANY' for any origin. (default: "::1,127.0.0.1").
   --help, -h         Show this help message.
 `);
     process.exit(0);
