@@ -1,6 +1,6 @@
 {
   "name": "wolite",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "A minimal Wake-on-LAN server with a web interface",
   "main": "app.js",
   "directories": {
