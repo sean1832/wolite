@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 require("dotenv").config();
 const createOTP = require("../utils/otp");
 const LogConsole = require("../utils/logging");
+const basicIpFilter = require("../middleware/basicIpFilter");
 
 const router = express.Router();
 
@@ -11,6 +12,8 @@ const router = express.Router();
 router.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "..", "public", "login.html"));
 });
+
+router.use(basicIpFilter);
 
 // POST /auth - process the login form submission
 router.post("/", (req, res) => {
