@@ -24,7 +24,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: Number(process.env.COOKIE_LIFETIME),
+      maxAge: Number(process.env.SESSION_LIFETIME),
     },
   })
 );
