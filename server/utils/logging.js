@@ -1,24 +1,38 @@
-require("dotenv").config(); // Load environment variables
-const fs = require("fs");
-const log_dir = __dirname + "/../../logs";
-if (!fs.existsSync(log_dir)) {
-  fs.mkdirSync(log_dir);
-}
-const date = new Date();
-const server_start_time =
-  `${date.getUTCFullYear()}` +
-  `${date.getUTCMonth()}` +
-  `${date.getUTCDate()}` +
-  `${date.getUTCHours()}` +
-  `${date.getUTCMinutes()}` +
-  `${date.getUTCSeconds()}`;
-const log_file = fs.createWriteStream(log_dir + `/${server_start_time}.log`, { flags: "w" });
+/**
+ * Logs a message with the specified level.
+ *
+ * @param {"log"|"warn"|"error"|"info"|"debug"} [level="log"] - The log level.
+ * @param {string} content - The content to log.
+ * @param {string} ip - The IP address.
+ */
+const LogConsole = (level = "info", content, ip) => {
+  if (!content) {
+    throw new Error("Content are required.");
+  }
+  let msg;
+  if (!ip) {
+    msg = `${content}\n`;
+  } else {
+    msg = `[${ip}] ${content}\n`;
+  }
 
-const LogToFile = (ip, content) => {
-  if (process.env.ENABLE_LOG == "true") {
-    const current_time_utc = new Date().toUTCString();
-    log_file.write(`[${current_time_utc}] [${ip}] ${content}\n`);
+  if (level === "error") {
+    console.error(msg);
+    return;
+  } else if (level === "warn") {
+    console.warn(msg);
+    return;
+  } else if (level === "info") {
+    console.info(msg);
+    return;
+  } else if (level === "debug") {
+    console.debug(msg);
+    return;
+  } else if (level === "log") {
+    console.log(msg);
+  } else {
+    throw new Error("Invalid log level.");
   }
 };
 
-module.exports = LogToFile;
+module.exports = LogConsole;
