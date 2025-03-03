@@ -9,6 +9,7 @@ const wakeRouter = require("./server/routes/wake");
 const authRouter = require("./server/routes/auth");
 const sessionRouter = require("./server/routes/session");
 const authConfigRouter = require("./server/routes/authConfig");
+const GetDynamicPage = require("./server/utils/serveDynamicPage");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,15 +30,20 @@ app.use(
 );
 
 // Serve static assets (CSS, images, etc.)
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 // Main route: check authentication before serving the app
 app.get("/", (req, res) => {
   if (!req.session.isAuthenticated) {
     return res.redirect("/auth");
   }
+
+  versionData = {
+    version: process.env.npm_package_version,
+  };
+
   // Serve the main application page if authenticated
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.send(GetDynamicPage("index.html", versionData));
 });
 
 // Mount the session status route at /api/session-status
