@@ -10,8 +10,16 @@ function basicIpAuth(req, res, next) {
     clientIp = clientIp.substring(7);
   }
 
+  const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+
+  // If "*" is present, allow all IPs.
+  if (allowedOrigins.includes("*")) {
+    LogConsole("info", "IP allowed (all IPs permitted due to wildcard '*').", clientIp);
+    return next();
+  }
+
   // Check if the client's IP is in the allowedIPs list
-  if (!JSON.parse(process.env.ALLOWED_ORIGINS).includes(clientIp)) {
+  if (!allowedOrigins.includes(clientIp)) {
     LogConsole("warn", "Access denied. IP not allowed.", clientIp);
     return res.status(403).send("Access denied.");
   }

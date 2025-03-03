@@ -152,7 +152,7 @@ async function interactiveMode() {
     const port = (await askQuestion("Enter the port number (3000): ")) || "3000";
 
     const originsAnswer = await askQuestion(
-      "Enter the allowed origins (comma separated, default: ::1,127.0.0.1): "
+      "Enter the allowed origins (comma separated, '*' for any origin, default: ::1,127.0.0.1): "
     );
 
     const configInput = {
@@ -196,7 +196,7 @@ Options:
   --password         Required. Plain text password (will be hashed).
   --enable-otp       Optional. Include this flag to enable OTP.
   --port             Optional. Server port number (default: 3000).
-  --allowed-origins  Optional. Comma separated list of allowed origins (default: "::1,127.0.0.1").
+  --allowed-origins  Optional. Comma separated list of allowed origins. '*' for any origin. (default: "::1,127.0.0.1").
   --help, -h         Show this help message.
 `);
     process.exit(0);

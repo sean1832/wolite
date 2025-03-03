@@ -12,10 +12,7 @@ const customAuth = (req, res, next) => {
   res.redirect("/auth");
 };
 
-// Optionally apply IP filter if enabled
-if (process.env.ENABLE_IP_FILTER === "true") {
-  router.use(basicIpFilter);
-}
+router.use(basicIpFilter);
 
 // Apply the session authentication middleware
 router.use(customAuth);
