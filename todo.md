@@ -1,0 +1,2 @@
+- [ ] encryption for cookies
+- [ ] encryption for passwords, usernames for authentication transactions
