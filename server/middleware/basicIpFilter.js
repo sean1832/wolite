@@ -1,4 +1,4 @@
-const GetErrorPage = require("../utils/error");
+const GetErrorPage = require("../utils/serveErrorPage");
 const LogConsole = require("../utils/logging");
 require("dotenv").config();
 
