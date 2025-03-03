@@ -1,4 +1,4 @@
-const LogToFile = require("../utils/logging");
+const LogConsole = require("../utils/logging");
 require("dotenv").config();
 
 function basicIpAuth(req, res, next) {
@@ -10,13 +10,20 @@ function basicIpAuth(req, res, next) {
     clientIp = clientIp.substring(7);
   }
 
+  const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+
+  // If "*" is present, allow all IPs.
+  if (allowedOrigins.includes("*")) {
+    LogConsole("info", "IP allowed (all IPs permitted due to wildcard '*').", clientIp);
+    return next();
+  }
+
   // Check if the client's IP is in the allowedIPs list
-  if (!JSON.parse(process.env.ALLOWED_ORIGINS).includes(clientIp)) {
-    console.log(`Access denied for IP: ${clientIp}`);
-    LogToFile(clientIp, "Access denied. IP not allowed.");
+  if (!allowedOrigins.includes(clientIp)) {
+    LogConsole("warn", "Access denied. IP not allowed.", clientIp);
     return res.status(403).send("Access denied.");
   }
-  LogToFile(clientIp, "IP allowed.");
+  LogConsole("info", "IP allowed.", clientIp);
   next();
 }
 

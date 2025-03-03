@@ -1,4 +1,5 @@
 const wol = require("wol");
+const LogConsole = require("../utils/logging");
 
 /**
  * Sends a Wake-on-LAN magic packet.
@@ -8,7 +9,7 @@ const wol = require("wol");
 function sendMagicPacket(mac, callback) {
   wol.wake(mac, function (error) {
     if (error) {
-      console.error("Error sending magic packet:", error);
+      LogConsole("error", `Error sending magic packet: ${error}`);
       return callback(error);
     }
     callback(null, `Magic packet sent.`);
