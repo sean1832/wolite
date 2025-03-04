@@ -57,7 +57,7 @@ docker run -d -p 3000:3000 \
   -e PASSWORD="your-password" \
   -e ALLOWED_IPS="ALL" \
   -e ENABLE_OTP=false \
-  -v ./.env:/usr/wolite/.env
+  -v /full/path/to/.env:/usr/wolite/.env
   --name wolite
   sean1832/wolite
 ```

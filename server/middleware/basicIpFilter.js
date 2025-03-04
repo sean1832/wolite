@@ -11,7 +11,19 @@ function basicIpAuth(req, res, next) {
     clientIp = clientIp.substring(7);
   }
 
-  const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+  let allowedOrigins;
+  try {
+    allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+  } catch (error) {
+    LogConsole(
+      "error",
+      `Error parsing ALLOWED_ORIGINS: ${error}; ALLOWED_ORIGINS: ${process.env.ALLOWED_ORIGINS}`,
+      clientIp
+    );
+    return res
+      .status(500)
+      .send(GetErrorPage(500, "Internal Server Error. Check the logs for more details."));
+  }
 
   // If "ALL" is present, allow all IPs.
   if (allowedOrigins.includes("ALL")) {

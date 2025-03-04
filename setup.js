@@ -99,8 +99,7 @@ async function buildConfig(input) {
  * Write the .env file using the provided configuration.
  */
 function writeEnvFile(config) {
-  const envContent =
-    `# Security configs
+  const envContent = `# Security configs
 AUTH_USER="${config.username}"
 AUTH_PASSWORD_HASH="${config.hashedPassword}"
 SESSION_SECRET="${config.sessionSecret}"
