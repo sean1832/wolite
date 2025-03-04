@@ -55,7 +55,7 @@ Deploy with docker command:
 docker run -d -p 3000:3000 \
   -e USERNAME="your-username" \
   -e PASSWORD="your-password" \
-  -e ALLOWED_IPS="ANY" \
+  -e ALLOWED_IPS="ALL" \
   -e ENABLE_OTP=false \
   -v /full/path/to/.env:/usr/wolite/.env
   --name wolite
@@ -65,7 +65,7 @@ docker run -d -p 3000:3000 \
 For more information, see [Docker Deployment Guide](/docs/deploy-with-docker.md).
 
 > [!TIP]
-> Replace `ALLOWED_ORIGINS="ANY"` with specific IP addresses to restrict access to the web interface. `ANY` allows all origins. You can use a comma-separated list of IP addresses to allow multiple origins (e.g., `ALLOWED_IPS="192.168.x.x, 192.168.x.x"`).
+> Replace `ALLOWED_ORIGINS="ALL"` with specific IP addresses to restrict access to the web interface. `ALL` allows all origins. You can use a comma-separated list of IP addresses to allow multiple origins (e.g., `ALLOWED_IPS="192.168.x.x, 192.168.x.x"`).
 
 > [!TIP]
 > You must provide **FULL PATH** to the `.env` file in the `-v` flag. Replace `/full/path/to/.env` with the actual path to the `.env` file.
@@ -93,7 +93,7 @@ services:
       - USERNAME=your-username # required
       - PASSWORD=your-password # required
       # - ENABLE_OTP=true
-      # - ALLOWED_ORIGINS="ANY" # wildcard `ANY` to allow all ip. Add specific ip addresses to restrict access
+      # - ALLOWED_ORIGINS="ALL" # wildcard `ALL` to allow all ip. Add specific ip addresses to restrict access
     volumes:
       - ./.env:/usr/wolite/.env
 ```

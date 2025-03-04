@@ -25,9 +25,9 @@ function basicIpAuth(req, res, next) {
       .send(GetErrorPage(500, "Internal Server Error. Check the logs for more details."));
   }
 
-  // If "ANY" is present, allow all IPs.
-  if (allowedOrigins.includes("ANY")) {
-    LogConsole("info", "IP allowed (all IPs permitted 'ANY').", clientIp);
+  // If "ALL" is present, allow all IPs.
+  if (allowedOrigins.includes("ALL")) {
+    LogConsole("info", "IP allowed (all IPs permitted 'ALL').", clientIp);
     return next();
   }
 
