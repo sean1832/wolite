@@ -9,6 +9,6 @@ services:
       - USERNAME=your-username # required
       - PASSWORD=your-password # required
       # - ENABLE_OTP=true
-      # - ALLOWED_ORIGINS="*" # wildcard `*` to allow all ip. Add specific ip addresses to restrict access
+      # - ALLOWED_IPS="ALL" # wildcard `ALL` to allow all ip. Add specific ip addresses to restrict access
     volumes:
       - ./.env:/usr/wolite/.env

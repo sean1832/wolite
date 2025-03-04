@@ -13,9 +13,9 @@ function basicIpAuth(req, res, next) {
 
   const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
 
-  // If "*" is present, allow all IPs.
-  if (allowedOrigins.includes("*")) {
-    LogConsole("info", "IP allowed (all IPs permitted due to wildcard '*').", clientIp);
+  // If "ALL" is present, allow all IPs.
+  if (allowedOrigins.includes("ALL")) {
+    LogConsole("info", "IP allowed (all IPs permitted 'ALL').", clientIp);
     return next();
   }
 
