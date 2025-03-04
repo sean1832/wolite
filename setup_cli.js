@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// This script is used to generate `config.json` based on user input.
+// Run `npm run setup` to start the interactive setup process.
 const fs = require("fs");
 const readline = require("readline");
 const bcrypt = require("bcrypt");
@@ -74,9 +76,17 @@ async function buildConfig(input) {
 
   let otpSecret, otpURI;
   if (input.enableOTP) {
-    otpSecret = new otp.Secret({ size: 20 }).base32;
-    const totp = createOTP(otpSecret);
-    otpURI = totp.toString();
+    // If OTP URI is provided, use it
+    if (input.otpURI && input.otpURI.trim() !== "") {
+      const totp = otp.URI.parse(input.otpURI);
+      otpSecret = totp.secret.base32;
+      otpURI = totp.toString();
+    } else {
+      // Otherwise, generate a new secret and OTP
+      otpSecret = new otp.Secret({ size: 20 }).base32;
+      const totp = createOTP(otpSecret);
+      otpURI = totp.toString();
+    }
   } else {
     otpSecret = "N/A";
     otpURI = "";
@@ -134,6 +144,12 @@ async function interactiveMode() {
     const otpAnswer = await askQuestion("Enable OTP? (yes/[no]): ");
     const enableOTP = otpAnswer.trim().toLowerCase() === "yes";
 
+    // Only ask for OTP URI if OTP is enabled
+    let otpURIInput = "";
+    if (enableOTP) {
+      otpURIInput = await askQuestion("Enter OTP URI (leave blank to generate new one): ");
+    }
+
     const port = (await askQuestion("Enter the port number (3000): ")) || "3000";
 
     const originsAnswer = await askQuestion(
@@ -144,6 +160,7 @@ async function interactiveMode() {
       username,
       password,
       enableOTP,
+      otpURI: otpURIInput,
       port,
       allowedOrigins: originsAnswer,
     };
@@ -180,6 +197,7 @@ Options:
   --username         Required. Username for authentication.
   --password         Required. Plain text password (will be hashed).
   --enable-otp       Optional. Include this flag to enable OTP.
+  --otp-uri          Optional. Existing OTP URI to use (if OTP is enabled).
   --port             Optional. Server port number (default: 3000).
   --allowed-origins  Optional. Comma separated list of allowed origins (default: "::1,127.0.0.1").
   --help, -h         Show this help message.
@@ -202,6 +220,7 @@ Options:
     username,
     password,
     enableOTP: options["enable-otp"] || false,
+    otpURI: options["otp-uri"] || "",
     port: options.port || "3000",
     allowedOrigins: options["allowed-origins"] || "",
   };
