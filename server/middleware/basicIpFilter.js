@@ -1,6 +1,6 @@
 const GetErrorPage = require("../utils/serveErrorPage");
 const LogConsole = require("../utils/logging");
-require("dotenv").config();
+const config = require("../../config.json");
 
 function basicIpAuth(req, res, next) {
   // Get the client IP address. If your server is behind a proxy, you might need additional configuration.
@@ -13,11 +13,11 @@ function basicIpAuth(req, res, next) {
 
   let allowedOrigins;
   try {
-    allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+    allowedOrigins = config.ALLOWED_ORIGINS;
   } catch (error) {
     LogConsole(
       "error",
-      `Error parsing ALLOWED_ORIGINS: ${error}; ALLOWED_ORIGINS: ${process.env.ALLOWED_ORIGINS}`,
+      `Error parsing ALLOWED_ORIGINS: ${error}; ALLOWED_ORIGINS: ${JSON.stringify(config.ALLOWED_ORIGINS)}`,
       clientIp
     );
     return res

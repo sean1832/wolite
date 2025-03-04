@@ -3,6 +3,7 @@ const router = express.Router();
 const basicIpFilter = require("../middleware/basicIpFilter");
 const sendMagicPacket = require("../logic/sendMagicPacket");
 const LogConsole = require("../utils/logging");
+const config = require("../../config.json");
 
 // Custom middleware to check if the user is authenticated
 const customAuth = (req, res, next) => {
@@ -44,7 +45,7 @@ router.get("/", (req, res) => {
         .send("Error sending magic packet. Check the logs for more details.");
     }
     LogConsole("info", result, clientIp);
-    res.cookie("mac", mac, { maxAge: Number(process.env.COOKIE_LIFETIME) });
+    res.cookie("mac", mac, { maxAge: config.COOKIE_LIFETIME });
     res.status(200).type("text/plain").send(result);
   });
 });

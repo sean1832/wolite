@@ -5,6 +5,7 @@ require("dotenv").config();
 const createOTP = require("../utils/otp");
 const LogConsole = require("../utils/logging");
 const basicIpFilter = require("../middleware/basicIpFilter");
+const config = require("../../config.json");
 
 const router = express.Router();
 
@@ -20,21 +21,21 @@ router.post("/", (req, res) => {
   const { username, password, totp } = req.body;
 
   // Check username against environment variable
-  if (username === process.env.AUTH_USER) {
-    bcrypt.compare(password, process.env.AUTH_PASSWORD_HASH, (err, passwordMatch) => {
+  if (username === config.AUTH_USER) {
+    bcrypt.compare(password, config.AUTH_PASSWORD_HASH, (err, passwordMatch) => {
       if (passwordMatch) {
         // Check OTP if enabled
-        if (process.env.ENABLE_OTP === "true") {
+        if (config.ENABLE_OTP === true) {
           try {
             if (!totp) {
               LogConsole("warn", "OTP required.", req.ip);
               return res.redirect("/auth?error=OTP%20required.");
             }
-            if (process.env.OTP_SECRET === "N/A" || !process.env.OTP_SECRET) {
+            if (config.OTP_SECRET === "N/A" || !config.OTP_SECRET) {
               LogConsole("warn", "OTP is enabled but not configured.", req.ip);
               return res.redirect("/auth?error=OTP%20is%20enabled%20but%20not%20configured.");
             }
-            const totpInstance = createOTP(process.env.OTP_SECRET);
+            const totpInstance = createOTP(config.OTP_SECRET);
             const delta = totpInstance.validate({ token: totp, window: 1 });
             if (delta === null) {
               LogConsole("warn", "Invalid OTP provided.", req.ip);

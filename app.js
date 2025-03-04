@@ -4,6 +4,7 @@ const path = require("path");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const package = require("./package.json");
+const config = require("./config.json");
 
 // Import the routes
 const wakeRouter = require("./server/routes/wake");
@@ -13,7 +14,7 @@ const authConfigRouter = require("./server/routes/authConfig");
 const GetDynamicPage = require("./server/utils/serveDynamicPage");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = config.PORT;
 
 // Parse URL-encoded bodies (for form submissions)
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -21,11 +22,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Configure session management
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: config.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: Number(process.env.SESSION_LIFETIME),
+      maxAge: config.SESSION_LIFETIME,
     },
   })
 );
