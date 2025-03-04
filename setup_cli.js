@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const fs = require("fs");
 const readline = require("readline");
 const bcrypt = require("bcrypt");
@@ -49,7 +48,7 @@ function generateRandomChar(length) {
 }
 
 /**
- * Ensure allowed origins are processed into an array with default values.
+ * Process allowed origins into an array. Defaults to [ "::1", "127.0.0.1" ].
  */
 function processAllowedOrigins(originsInput) {
   if (!originsInput || (typeof originsInput === "string" && originsInput.trim() === "")) {
@@ -68,7 +67,6 @@ function processAllowedOrigins(originsInput) {
 
 /**
  * Build the configuration object based on provided inputs.
- * It handles password hashing, OTP generation, session secret, etc.
  */
 async function buildConfig(input) {
   const hashedPassword = await bcrypt.hash(input.password, 10);
@@ -85,39 +83,25 @@ async function buildConfig(input) {
   }
 
   return {
-    username: input.username,
-    hashedPassword,
-    sessionSecret,
-    enableOTP: input.enableOTP,
-    otpSecret,
-    otpURI,
-    port: input.port || "3000",
-    allowedOrigins: processAllowedOrigins(input.allowedOrigins),
+    AUTH_USER: input.username,
+    AUTH_PASSWORD_HASH: hashedPassword,
+    SESSION_SECRET: sessionSecret,
+    SESSION_LIFETIME: 1800000, // 30 minutes in ms
+    ENABLE_OTP: input.enableOTP,
+    OTP_SECRET: otpSecret,
+    OTP_URI: otpURI,
+    PORT: Number(input.port) || 3000,
+    ALLOWED_ORIGINS: processAllowedOrigins(input.allowedOrigins),
+    COOKIE_LIFETIME: 604800000, // 7 days in ms
   };
 }
 
 /**
- * Write the .env file using the provided configuration.
+ * Write the configuration object to config.json.
  */
-function writeEnvFile(config) {
-  const envContent = `# Security configs
-AUTH_USER="${config.username}"
-AUTH_PASSWORD_HASH="${config.hashedPassword}"
-SESSION_SECRET="${config.sessionSecret}"
-SESSION_LIFETIME=1800000 # 30 minutes in milliseconds
-
-# (optional) OTP configs
-ENABLE_OTP=${config.enableOTP}
-OTP_SECRET="${config.otpSecret}"
-OTP_URI="${config.otpURI}" # OTP URI for QR code
-
-# Server configs
-PORT=${config.port}
-ALLOWED_ORIGINS=${JSON.stringify(config.allowedOrigins)} # add "ALL" to allow all origins
-COOKIE_LIFETIME=604800000 # 7 days in milliseconds
-`;
-  fs.writeFileSync(".env", envContent);
-  console.log("\n.env file generated successfully.");
+function writeConfig(config) {
+  fs.writeFileSync("config.json", JSON.stringify(config, null, 4));
+  console.log("\nconfig.json generated successfully.");
 }
 
 /**
@@ -153,7 +137,7 @@ async function interactiveMode() {
     const port = (await askQuestion("Enter the port number (3000): ")) || "3000";
 
     const originsAnswer = await askQuestion(
-      "Enter the allowed origins (comma separated, '*' for any origin, default: ::1,127.0.0.1): "
+      "Enter the allowed origins (comma separated, default: ::1,127.0.0.1): "
     );
 
     const configInput = {
@@ -166,16 +150,16 @@ async function interactiveMode() {
 
     const config = await buildConfig(configInput);
 
-    const writeEnvAnswer = await askQuestion("\nSave to .env file? ([yes]/no): ");
-    if (writeEnvAnswer.trim().toLowerCase() === "no") {
-      console.log("Not writing .env file. Exiting.");
+    const writeConfigAnswer = await askQuestion("\nSave to config.json? ([yes]/no): ");
+    if (writeConfigAnswer.trim().toLowerCase() === "no") {
+      console.log("Not writing config.json. Exiting.");
       rl.close();
       process.exit(0);
     }
 
-    writeEnvFile(config);
+    writeConfig(config);
 
-    console.log("\nEnvironment variables have been set.");
+    console.log("\nConfiguration has been set.");
     console.log("You can now run the server with:\n\nnpm run start\n");
     rl.close();
     process.exit(0);
@@ -197,7 +181,7 @@ Options:
   --password         Required. Plain text password (will be hashed).
   --enable-otp       Optional. Include this flag to enable OTP.
   --port             Optional. Server port number (default: 3000).
-  --allowed-origins  Optional. Comma separated list of allowed origins. 'ALL' for any origin. (default: "::1,127.0.0.1").
+  --allowed-origins  Optional. Comma separated list of allowed origins (default: "::1,127.0.0.1").
   --help, -h         Show this help message.
 `);
     process.exit(0);
@@ -223,9 +207,9 @@ Options:
   };
 
   const config = await buildConfig(configInput);
-  writeEnvFile(config);
+  writeConfig(config);
 
-  console.log("\nEnvironment variables have been set.");
+  console.log("\nConfiguration has been set.");
   console.log("You can now run the server with:\n\nnpm run start\n");
   process.exit(0);
 }
