@@ -28,7 +28,7 @@ function generateRandomChar(length) {
 // default configuration
 let config = {
   AUTH_USER: process.env.USERNAME,
-  AUTH_PASSWORD_HASH: bcrypt.hash(process.env.PASSWORD, 10),
+  AUTH_PASSWORD_HASH: "N/A",
   SESSION_SECRET: generateRandomChar(32),
   SESSION_LIFETIME: 1800000,
   ENABLE_OTP: process.env.ENABLE_OTP === "true",
@@ -39,7 +39,11 @@ let config = {
   COOKIE_LIFETIME: 604800000,
 };
 
-async function main() {
+async function set_config() {
+  // Hash the password
+  const hashedPassword = await bcrypt.hash(process.env.PASSWORD, 10);
+  config.AUTH_PASSWORD_HASH = hashedPassword;
+
   // OTP configuration
   if (config.ENABLE_OTP) {
     let otpSecret;
@@ -86,6 +90,11 @@ async function main() {
   }
 
   writeConfig("data/config.json", config);
+}
+
+async function main() {
+  await set_config();
+  console.log("Configuration file generated successfully.");
 }
 
 main().catch((err) => {
