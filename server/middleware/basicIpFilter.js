@@ -1,6 +1,6 @@
 const GetErrorPage = require("../utils/serveErrorPage");
 const LogConsole = require("../utils/logging");
-const config = require("../../config.json");
+const config = require("../../data/config.json");
 
 function basicIpAuth(req, res, next) {
   // Get the client IP address. If your server is behind a proxy, you might need additional configuration.

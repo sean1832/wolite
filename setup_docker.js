@@ -16,7 +16,8 @@ function writeConfig(path, data) {
  * Generate a random string of the given length.
  */
 function generateRandomChar(length) {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,-./:;<=>?@[]^_`{|}~";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,-./:;<=>?@[]^_`{|}~";
   let result = "";
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -26,8 +27,8 @@ function generateRandomChar(length) {
 
 // default configuration
 let config = {
-  AUTH_USER: process.env.USER,
-  AUTH_PASSWORD_HASH: "N/A",
+  AUTH_USER: process.env.USERNAME,
+  AUTH_PASSWORD_HASH: bcrypt.hash(process.env.PASSWORD, 10),
   SESSION_SECRET: generateRandomChar(32),
   SESSION_LIFETIME: 1800000,
   ENABLE_OTP: process.env.ENABLE_OTP === "true",
@@ -39,13 +40,8 @@ let config = {
 };
 
 async function main() {
-  // Hash the password
-  const hashedPassword = bcrypt.hash(process.env.PASSWORD, 10);
-  config.AUTH_PASSWORD_HASH = hashedPassword;
-
-
   // OTP configuration
-  if (process.env.ENABLE_OTP === "true") {
+  if (config.ENABLE_OTP) {
     let otpSecret;
     let totp;
     if (process.env.OTP_URI) {
@@ -89,7 +85,7 @@ async function main() {
     });
   }
 
-  writeConfig("config.json", config);
+  writeConfig("data/config.json", config);
 }
 
 main().catch((err) => {

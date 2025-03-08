@@ -110,7 +110,7 @@ async function buildConfig(input) {
  * Write the configuration object to config.json.
  */
 function writeConfig(config) {
-  fs.writeFileSync("config.json", JSON.stringify(config, null, 4));
+  fs.writeFileSync("data/config.json", JSON.stringify(config, null, 4));
   console.log("\nconfig.json generated successfully.");
 }
 

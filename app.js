@@ -4,7 +4,7 @@ const path = require("path");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const package = require("./package.json");
-const config = require("./config.json");
+const config = require("./data/config.json");
 
 // Import the routes
 const wakeRouter = require("./server/routes/wake");
