@@ -43,10 +43,10 @@ Access the web interface at:
 
 ### Deploy with Docker
 
-Create an empty `.env` file at the current directory:
+Create an empty `data` directory at the current directory:
 
 ```sh
-touch .env
+mkdir data
 ```
 
 Deploy with docker command:
@@ -55,11 +55,11 @@ Deploy with docker command:
 docker run -d -p 3000:3000 \
   -e USERNAME="your-username" \
   -e PASSWORD="your-password" \
-  -e ALLOWED_IPS="ALL" \
-  -e ENABLE_OTP=false \
-  -v /full/path/to/.env:/usr/wolite/.env
+  -e ALLOWED_IPS="ALL" \ # optional
+  -e ENABLE_OTP=false \ # optional
+  -v /full/path/to/data:/usr/wolite/data \ # optional
   --name wolite
-  sean1832/wolite
+  sean1832/wolite:latest
 ```
 
 For more information, see [Docker Deployment Guide](/docs/deploy-with-docker.md).
@@ -68,14 +68,14 @@ For more information, see [Docker Deployment Guide](/docs/deploy-with-docker.md)
 > Replace `ALLOWED_ORIGINS="ALL"` with specific IP addresses to restrict access to the web interface. `ALL` allows all origins. You can use a comma-separated list of IP addresses to allow multiple origins (e.g., `ALLOWED_IPS="192.168.x.x, 192.168.x.x"`).
 
 > [!TIP]
-> You must provide **FULL PATH** to the `.env` file in the `-v` flag. Replace `/full/path/to/.env` with the actual path to the `.env` file.
+> You must provide **FULL PATH** to the `data` directory in the `-v` flag. Replace `/full/path/to/data` with the actual path to the `data` directory path.
 
 ### Deploy with Docker Compose
 
-Create an empty `.env` file at the current directory where the `docker-compose.yml` file is located.
+Create an empty `data` folder at the current directory where the `docker-compose.yml` file is located.
 
 ```sh
-touch .env
+mkdir data
 touch docker-compose.yaml
 ```
 
@@ -92,10 +92,13 @@ services:
     environment:
       - USERNAME=your-username # required
       - PASSWORD=your-password # required
+
+      # # (Optional) Uncomment to enable
       # - ENABLE_OTP=true
-      # - ALLOWED_ORIGINS="ALL" # wildcard `ALL` to allow all ip. Add specific ip addresses to restrict access
+      # - ALLOWED_ORIGINS="ALL" # `ALL` to allow all ip. Add specific ip addresses to restrict access
+      # - PORT=3000
     volumes:
-      - ./.env:/usr/wolite/.env
+      - ./data:/usr/wolite/data
 ```
 
 Run the following command to deploy WOLITE with Docker Compose:
@@ -105,6 +108,6 @@ docker-compose up -d
 ```
 
 > [!TIP]
-> You can find the `OTP_URI` in the `.env` file after the container is started. Use the `OTP_URI` to generate the OTP code with an authenticator app like Google Authenticator or a password manager like 1Password.
+> You can find the `OTP_URI` in the `data/config.json` file after the container is started. Use the `OTP_URI` to generate the OTP code with an authenticator app like Google Authenticator or a password manager like 1Password.
 
 For more information, see [Docker Compose Deployment Guide](/docs/deploy-with-docker-compose.md).

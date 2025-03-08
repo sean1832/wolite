@@ -18,23 +18,26 @@ When using `docker-compose`, the configuration file is as follows:
 version: "3"
 services:
   wolite:
-    image: sean1832/wolite
+    image: sean1832/wolite:latest
     container_name: wolite
     ports:
       - "3000:3000"
     environment:
       - USERNAME=your-username # required
       - PASSWORD=your-password # required
+
+      # # (Optional) Uncomment to enable
       # - ENABLE_OTP=true
-      # - ALLOWED_ORIGINS=yourip1,yourip2
+      # - ALLOWED_ORIGINS="ALL" # `ALL` to allow all ip. Add specific ip addresses to restrict access
+      # - PORT=3000
     volumes:
-      - ./.env:/usr/wolite/.env
+      - ./data:/usr/wolite/data
 ```
 
-Create an empty `.env` file at the current directory where the `docker-compose.yml` file is located.
+Create an empty `data` folder at the current directory where the `docker-compose.yml` file is located.
 
 ```sh
-touch .env
+mkdir data
 ```
 
 Run the following command to deploy WOLITE with Docker Compose:
