@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "username": "admin2",
+      "password": "567"
+    },
+    {
+      "username": "admin1",
+      "password": "$2a$10$n1g3KpIXQ2XsFkynVumPLu09p67EBpaPcEy.43dHCDZDa9Sy.M53C"
+    },
+    {
+      "username": "admin3",
+      "password": "$2a$10$6fueEFhk6ggEFIuTTCU8Q.GgcFZG40lqmjKb7Zc6h3J3RiXvD.APi"
+    },
+    {
+      "username": "admin4",
+      "password": "$2a$10$0Ru3m9N/FM5NZ3KAOINF8u4WB4HfVR6jsEzPq1IsQZyZ6Mb5b7zf6",
+      "otp": "23TJYNALIKAMXTGYX65IR7JHGF4EZ6WY"
+    }
+  ],
+  "devices": []
+}
