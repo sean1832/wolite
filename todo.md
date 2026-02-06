@@ -1,3 +1,0 @@
-- [ ] encryption for cookies
-- [ ] encryption for passwords, usernames for authentication transactions
-- [ ] tidy up the environment variables

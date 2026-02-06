@@ -1,7 +1,0 @@
-node_modules
-package-lock.json
-.env
-logs
-docs/images
-**/*.bak
-data
