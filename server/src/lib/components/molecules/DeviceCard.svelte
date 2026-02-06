@@ -64,8 +64,8 @@
   <Button 
       variant="outline" 
       class={cn(
-          "w-full h-9 justify-between group/btn hover:bg-primary hover:text-primary-foreground border-border/40 transition-all duration-300", 
-          isOnline && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground hover:border-border/40"
+          "w-full h-9 justify-between group/btn transition-all duration-300 border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-primary/30 dark:hover:border-primary/50", 
+          isOnline && "opacity-50 cursor-not-allowed pointer-events-none"
       )}
       onclick={handleWake}
       disabled={isOnline}

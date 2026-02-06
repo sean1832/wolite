@@ -1,12 +1,19 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
+import { db } from '$lib/server/db';
 
 export const handle: Handle = async ({ event, resolve }) => {
     const sessionToken = event.cookies.get('session');
     let user = null;
 
     if (sessionToken) {
-        user = auth.verifySessionToken(sessionToken);
+        const decoded = auth.verifySessionToken(sessionToken);
+        if (decoded) {
+            const dbUser = db.findUser(decoded.username);
+            if (dbUser) {
+                user = { username: dbUser.username, hasOTP: !!dbUser.otpSecret };
+            }
+        }
     }
 
     if (user) {

@@ -55,6 +55,17 @@ export const db = {
         db.saveUsers(users);
     },
 
+    updateUser: (oldUsername: string, updatedUser: User) => {
+        const users = db.getUsers();
+        const index = users.findIndex(u => u.username === oldUsername);
+        if (index !== -1) {
+            users[index] = updatedUser;
+            db.saveUsers(users);
+            return true;
+        }
+        return false;
+    },
+
     findUser: (username: string): User | undefined => {
         const users = db.getUsers();
         return users.find(u => u.username === username);

@@ -105,6 +105,11 @@ Components follow **Atomic Design** in `server/src/lib/components/`:
 - Use `tailwind-variants` (`tv()`) for component variants (see `button.svelte` for example)
 - Each component folder has an `index.ts` barrel file exporting named components
 
+### Icons
+
+- Use `@lucide/svelte` for icons
+  e.g. `import { UserIcon } from "@lucide/svelte";`
+
 ### Path Aliases
 
 ```typescript

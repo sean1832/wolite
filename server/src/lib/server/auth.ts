@@ -34,7 +34,52 @@ export const auth = {
         const validPass = await bcrypt.compare(password, user.passwordHash);
         if (!validPass) return null;
 
-        return { username: user.username, hasOTP: !!user.otpSecret };
+        return { username: user.username, hasOTP: !!user.otpSecret, passwordHash: user.passwordHash, otpSecret: user.otpSecret };
+    },
+
+    updateUsername: (oldUsername: string, newUsername: string) => {
+        if (db.findUser(newUsername)) throw new Error("Username already taken");
+        const user = db.findUser(oldUsername);
+        if (!user) throw new Error("User not found");
+        
+        const updatedUser = { ...user, username: newUsername };
+        db.updateUser(oldUsername, updatedUser);
+        return updatedUser;
+    },
+
+    updatePassword: async (username: string, newPassword: string) => {
+        const user = db.findUser(username);
+        if (!user) throw new Error("User not found");
+
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+        const updatedUser = { ...user, passwordHash };
+        db.updateUser(username, updatedUser);
+    },
+
+    disableOTP: (username: string) => {
+        const user = db.findUser(username);
+        if (!user) throw new Error("User not found");
+
+        const updatedUser = { ...user, otpSecret: undefined };
+        db.updateUser(username, updatedUser);
+    },
+
+    regenerateOTP: async (username: string) => {
+        const user = db.findUser(username);
+        if (!user) throw new Error("User not found");
+
+        const { secret, imageUrl } = await auth.generateOTP(username);
+        // Do not save immediately? Or save? 
+        // Logic: if we regenerate, we usually want to save the new secret immediately 
+        // OR we return it and require a verify step.
+        // For simple Account page implementation as requested: User asks to regnerate, we update it.
+        // But ideally they should scan it.
+        // Let's update it immediately for now to match the user request "regenerate otp" without complex verify flow,
+        // but passing back the QR code so they can add it to their app.
+        const updatedUser = { ...user, otpSecret: secret };
+        db.updateUser(username, updatedUser);
+        
+        return { secret, imageUrl };
     },
 
     // OTP Utils
