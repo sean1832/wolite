@@ -5,12 +5,13 @@
     import { Label } from "$lib/components/ui/label";
     import { deviceStore } from "$lib/stores/devices.svelte";
     import type { Device } from "$lib/types";
+    import { untrack } from "svelte";
 
     let { open = $bindable(false), device }: { open: boolean, device: Device } = $props();
     
-    let name = $state(device.name);
-    let ip = $state(device.ip);
-    let mac = $state(device.mac);
+    let name = $state(untrack(() => device.name));
+    let ip = $state(untrack(() => device.ip));
+    let mac = $state(untrack(() => device.mac));
 
     // Update local state when device prop changes
     $effect(() => {
