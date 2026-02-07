@@ -27,13 +27,14 @@ func (a *API) validateCookies(r *http.Request) (*auth.Claims, error) {
 func (a *API) guard(w http.ResponseWriter, r *http.Request) *auth.Claims {
 	claims, err := a.validateCookies(r)
 	if err != nil {
-		if err == ErrUnauthorized {
+		switch err {
+		case ErrUnauthorized:
 			writeRespErr(w, "unauthenticated", http.StatusUnauthorized)
 			slog.Error("unauthenticated", "path", r.URL.Path)
-		} else if err == ErrInvalidRequest {
+		case ErrInvalidRequest:
 			writeRespErr(w, "Invalid request", http.StatusBadRequest)
 			slog.Error("invalid request", "path", r.URL.Path, "error", err)
-		} else {
+		default:
 			writeRespErr(w, "Authentication failed", http.StatusInternalServerError)
 			slog.Error("authentication failed", "path", r.URL.Path, "error", err)
 		}
