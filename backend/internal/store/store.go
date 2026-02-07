@@ -12,8 +12,9 @@ type Store struct {
 	mu   sync.RWMutex
 	path string
 	// Internal cache
-	users   map[string]User   // map for O(1) lookup
-	devices map[string]Device // map for O(1) lookup
+	users              map[string]User                         // map for O(1) lookup
+	devices            map[string]Device                       // map for O(1) lookup
+	userDeviceMappings map[string]map[string]UserDeviceMapping // map for O(1) lookup
 }
 
 // New initializes the store.
@@ -23,9 +24,10 @@ func New(path string) (*Store, error) {
 	}
 
 	s := &Store{
-		path:    path,
-		users:   make(map[string]User),
-		devices: make(map[string]Device),
+		path:               path,
+		users:              make(map[string]User),
+		devices:            make(map[string]Device),
+		userDeviceMappings: make(map[string]map[string]UserDeviceMapping),
 	}
 
 	// Load existing data if file exists
@@ -43,63 +45,17 @@ func New(path string) (*Store, error) {
 	return s, nil
 }
 
-// FindUser returns a copy of the user.
-// It returns a value (User), not a pointer, ensuring immutability of the internal cache.
-func (s *Store) FindUser(username string) (User, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	u, ok := s.users[username]
-	if !ok {
-		return User{}, ErrUserNotFound
-	}
-	return u, nil
-}
-
-// CreateUser adds a new user only if the username is unique.
-func (s *Store) CreateUser(u User) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// Guard: Check existence
-	if _, exists := s.users[u.Username]; exists {
-		return ErrUserExists
-	}
-
-	// Action: Write to map
-	s.users[u.Username] = u
-
-	// Persistence: Flush to disk
-	return s.flush()
-}
-
-// UpdateUser replaces an existing user's data.
-// It fails if the user does not exist.
-func (s *Store) UpdateUser(u User) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// Guard: Ensure target exists
-	if _, exists := s.users[u.Username]; !exists {
-		return ErrUserNotFound
-	}
-
-	// Action: Overwrite entry
-	s.users[u.Username] = u
-
-	// Persistence: Flush to disk
-	return s.flush()
-}
-
 // flush writes the memory state to disk atomically.
 func (s *Store) flush() error {
 	// Convert maps to slices for JSON marshaling
 	data := struct {
-		Users   []User   `json:"users"`
-		Devices []Device `json:"devices"`
+		Users              []User              `json:"users"`
+		Devices            []Device            `json:"devices"`
+		UserDeviceMappings []UserDeviceMapping `json:"user_device_mappings"`
 	}{
-		Users:   make([]User, 0, len(s.users)),
-		Devices: make([]Device, 0, len(s.devices)),
+		Users:              make([]User, 0, len(s.users)),
+		Devices:            make([]Device, 0, len(s.devices)),
+		UserDeviceMappings: make([]UserDeviceMapping, 0, len(s.userDeviceMappings)),
 	}
 
 	for _, u := range s.users {
@@ -107,6 +63,11 @@ func (s *Store) flush() error {
 	}
 	for _, d := range s.devices {
 		data.Devices = append(data.Devices, d)
+	}
+	for _, mappings := range s.userDeviceMappings {
+		for _, m := range mappings {
+			data.UserDeviceMappings = append(data.UserDeviceMappings, m)
+		}
 	}
 
 	// Atomic Write Pattern
@@ -141,8 +102,9 @@ func (s *Store) load() error {
 
 	// Temp struct for decoding
 	var data struct {
-		Users   []User   `json:"users"`
-		Devices []Device `json:"devices"`
+		Users             []User              `json:"users"`
+		Devices           []Device            `json:"devices"`
+		UserDeviceMapping []UserDeviceMapping `json:"user_device_mappings"`
 	}
 
 	if err := json.NewDecoder(f).Decode(&data); err != nil {
@@ -158,6 +120,14 @@ func (s *Store) load() error {
 	s.devices = make(map[string]Device, len(data.Devices))
 	for _, d := range data.Devices {
 		s.devices[d.MACAddress] = d
+	}
+
+	s.userDeviceMappings = make(map[string]map[string]UserDeviceMapping)
+	for _, m := range data.UserDeviceMapping {
+		if s.userDeviceMappings[m.Username] == nil {
+			s.userDeviceMappings[m.Username] = make(map[string]UserDeviceMapping)
+		}
+		s.userDeviceMappings[m.Username][m.MACAddress] = m
 	}
 
 	return nil

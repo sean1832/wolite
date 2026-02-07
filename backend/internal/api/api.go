@@ -28,7 +28,7 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 	mux.HandleFunc("PUT "+p+"/users", a.handleUserUpdate)  // update the user (e.g. change password)
 
 	// Device routes
-	mux.HandleFunc("GET "+p+"/devices", a.handleDevices)              // list all devices the user has access to
+	mux.HandleFunc("GET "+p+"/devices", a.handleDevicesGetAll)        // list all devices the user has access to
 	mux.HandleFunc("POST "+p+"/devices", a.handleDeviceCreate)        // create a new device to the user's account
 	mux.HandleFunc("GET "+p+"/devices/{id}", a.handleDeviceGet)       // get a specific device by ID
 	mux.HandleFunc("PUT "+p+"/devices/{id}", a.handleDeviceUpdate)    // update a specific device by ID

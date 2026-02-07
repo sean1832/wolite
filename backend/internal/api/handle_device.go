@@ -2,8 +2,8 @@ package api
 
 import "net/http"
 
-func (a *API) handleDevices(w http.ResponseWriter, r *http.Request) {
-
+func (a *API) handleDevicesGetAll(w http.ResponseWriter, r *http.Request) {
+	
 }
 
 func (a *API) handleDeviceGet(w http.ResponseWriter, r *http.Request) {
