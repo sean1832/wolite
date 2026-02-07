@@ -34,13 +34,22 @@ func LoadConfig() *Config {
 		}
 		slog.Warn("JWT_SECRET not provided, generated a random one")
 	}
-	jwtExpiry, err := strconv.Atoi(os.Getenv("JWT_EXPIRY_SECONDS"))
+	jwtExpiryString := os.Getenv("JWT_EXPIRY_SECONDS")
+	if jwtExpiryString == "" {
+		log.Fatalf("JWT_EXPIRY_SECONDS not provided")
+	}
+	jwtExpiry, err := strconv.Atoi(jwtExpiryString)
 	if err != nil {
 		log.Fatalf("failed to parse JWT_EXPIRY_SECONDS: %v", err)
 	}
+	if jwtExpiry < 0 {
+		log.Fatalf("JWT_EXPIRY_SECONDS must be a positive integer")
+	}
+	slog.Info("JWT_EXPIRY_SECONDS", "value", strconv.Itoa(jwtExpiry))
+
 	return &Config{
 		JWTSecret:    jwtToken,
 		DatabasePath: os.Getenv("DATABASE_PATH"),
-		JWTExpiry:    time.Duration(jwtExpiry), // in seconds
+		JWTExpiry:    time.Duration(jwtExpiry) * time.Second,
 	}
 }
