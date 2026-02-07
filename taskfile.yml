@@ -43,7 +43,10 @@ tasks:
   backend-debug:
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - go build -o bin/{{.BINARY_NAME}} main.go
+      - cmd: go build -o bin/{{.BINARY_NAME}} main.go
+        platforms: [linux, darwin]
+      - cmd: go build -o bin/{{.BINARY_NAME}}.exe main.go
+        platforms: [windows]
 
   # Build Go backend (Production - Optimized)
   backend:
@@ -51,7 +54,10 @@ tasks:
     env:
       CGO_ENABLED: "0"
     cmds:
-      - go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}} main.go
+      - cmd: go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}} main.go
+        platforms: [linux, darwin]
+      - cmd: go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}}.exe main.go
+        platforms: [windows]
 
   # Orchestration
   build:
