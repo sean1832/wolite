@@ -10,11 +10,10 @@ const (
 )
 
 type Device struct {
-	ID          int    `json:"id"` // snowflake ID or auto-incrementing integer
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	MACAddress  string `json:"mac_address"`
-	IPAddress   string `json:"ip_address,omitempty"`
+	MACAddress  string `json:"mac_address"`           // unique identifier for the device
+	Name        string `json:"name"`                  // human-readable name for the device
+	Description string `json:"description,omitempty"` // optional description of the device
+	IPAddress   string `json:"ip_address,omitempty"`  // optional IP address of the device
 
-	Status Status `json:"status"`
+	Status Status `json:"status"` // current status of the device
 }

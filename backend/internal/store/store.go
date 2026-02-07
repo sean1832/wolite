@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 )
 
@@ -158,7 +157,7 @@ func (s *Store) load() error {
 
 	s.devices = make(map[string]Device, len(data.Devices))
 	for _, d := range data.Devices {
-		s.devices[strconv.Itoa(d.ID)] = d
+		s.devices[d.MACAddress] = d
 	}
 
 	return nil
