@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"wolite/internal/auth"
 )
@@ -79,19 +80,10 @@ func (a *API) handleAuthLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
-	c, err := r.Cookie("token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			writeRespWithStatus(w, "unauthenticated", nil, http.StatusUnauthorized)
-			return
-		}
-		writeRespWithStatus(w, "Invalid request", nil, http.StatusBadRequest)
-		return
-	}
-
-	claims, err := auth.ValidateJWTToken(c.Value, []byte(a.config.JWTSecret))
-	if err != nil {
-		writeRespWithStatus(w, "unauthenticated", nil, http.StatusUnauthorized)
+	claims := GetUserFromContext(r.Context())
+	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 

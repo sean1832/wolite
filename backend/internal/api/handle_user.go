@@ -106,6 +106,13 @@ func (a *API) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
+	claims := GetUserFromContext(r.Context())
+	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	payload := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -118,7 +125,13 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := a.store.FindUser(payload.Username)
+	if payload.Username != claims.Username {
+		writeRespErr(w, "Forbidden", http.StatusForbidden)
+		slog.Warn("user attempted to update another user", "user", claims.Username, "target", payload.Username)
+		return
+	}
+
+	user, err := a.store.FindUser(claims.Username)
 	if err != nil {
 		writeRespErr(w, "User not found", http.StatusNotFound)
 		slog.Error("User not found", "username", payload.Username, "error", err)

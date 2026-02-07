@@ -42,8 +42,10 @@ func (r *createDeviceRequest) Validate() error {
 
 // handleDevicesGetAll returns all devices associated with a username. (jwt protected)
 func (a *API) handleDevicesGetAll(w http.ResponseWriter, r *http.Request) {
-	claims := a.guard(w, r)
+	claims := GetUserFromContext(r.Context())
 	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -60,8 +62,10 @@ func (a *API) handleDevicesGetAll(w http.ResponseWriter, r *http.Request) {
 
 // handleDeviceGet returns a single device by MAC address that is accessible by the user. (jwt protected)
 func (a *API) handleDeviceGet(w http.ResponseWriter, r *http.Request) {
-	claims := a.guard(w, r)
+	claims := GetUserFromContext(r.Context())
 	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -90,8 +94,10 @@ func (a *API) handleDeviceGet(w http.ResponseWriter, r *http.Request) {
 
 // handleDeviceCreate creates a new device for a user. (jwt protected)
 func (a *API) handleDeviceCreate(w http.ResponseWriter, r *http.Request) {
-	claims := a.guard(w, r)
+	claims := GetUserFromContext(r.Context())
 	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -128,8 +134,10 @@ func (a *API) handleDeviceCreate(w http.ResponseWriter, r *http.Request) {
 
 // handleDeviceUpdate updates an existing device. (jwt protected)
 func (a *API) handleDeviceUpdate(w http.ResponseWriter, r *http.Request) {
-	claims := a.guard(w, r)
+	claims := GetUserFromContext(r.Context())
 	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -186,8 +194,10 @@ func (a *API) handleDeviceUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) handleDeviceDelete(w http.ResponseWriter, r *http.Request) {
-	claims := a.guard(w, r)
+	claims := GetUserFromContext(r.Context())
 	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -226,8 +236,10 @@ func (a *API) handleDeviceDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) handleDeviceWake(w http.ResponseWriter, r *http.Request) {
-	claims := a.guard(w, r)
+	claims := GetUserFromContext(r.Context())
 	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
