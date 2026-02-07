@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"wolite/internal/store"
+	"wolite/internal/wol"
 )
 
 type createDeviceRequest struct {
@@ -13,12 +14,14 @@ type createDeviceRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	IPAddress   string `json:"ip_address,omitempty"`
+	BroadcastIP string `json:"broadcast_ip,omitempty"`
 }
 
 type updateDeviceRequest struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	IPAddress   string `json:"ip_address,omitempty"`
+	BroadcastIP string `json:"broadcast_ip"`
 }
 
 func (r *createDeviceRequest) Validate() error {
@@ -27,6 +30,12 @@ func (r *createDeviceRequest) Validate() error {
 	}
 	if r.Name == "" {
 		return errors.New("name is required")
+	}
+	if r.IPAddress == "" {
+		return errors.New("ip address is required")
+	}
+	if r.BroadcastIP == "" {
+		return errors.New("broadcast ip is required")
 	}
 	return nil
 }
@@ -99,7 +108,7 @@ func (a *API) handleDeviceCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	device := store.NewDevice(req.MACAddress, req.Name, req.Description, req.IPAddress, store.StatusUnknown)
+	device := store.NewDevice(req.MACAddress, req.Name, req.Description, req.IPAddress, req.BroadcastIP, store.StatusUnknown)
 
 	// Secure Creation: Use CreateDeviceForUser for atomic creation and assignment
 	err := a.store.CreateDeviceForUser(claims.Username, device)
@@ -162,10 +171,9 @@ func (a *API) handleDeviceUpdate(w http.ResponseWriter, r *http.Request) {
 	if req.IPAddress != "" {
 		device.IPAddress = req.IPAddress
 	}
-
-	device.Name = req.Name
-	device.Description = req.Description
-	device.IPAddress = req.IPAddress
+	if req.BroadcastIP != "" {
+		device.BroadcastIP = req.BroadcastIP
+	}
 
 	err = a.store.UpdateDevice(device)
 	if err != nil {
@@ -218,4 +226,44 @@ func (a *API) handleDeviceDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) handleDeviceWake(w http.ResponseWriter, r *http.Request) {
+	claims := a.guard(w, r)
+	if claims == nil {
+		return
+	}
+
+	// get url id
+	id := r.PathValue("id")
+	if id == "" {
+		writeRespErr(w, "Invalid request", http.StatusBadRequest)
+		slog.Error("invalid id", "username", claims.Username)
+		return
+	}
+
+	// get device
+	device, err := a.store.GetDeviceForUser(claims.Username, id)
+	if err != nil {
+		if err == store.ErrDeviceNotFound {
+			writeRespErr(w, "Device not found", http.StatusNotFound)
+		} else {
+			writeRespErr(w, "Failed to delete device", http.StatusInternalServerError)
+		}
+		slog.Error("device not found or access denied", "username", claims.Username, "mac_address", id, "error", err)
+		return
+	}
+
+	broadcastIP := device.BroadcastIP
+	if broadcastIP == "" {
+		writeRespErr(w, "Device missing broadcast ip configuration", http.StatusBadRequest)
+		slog.Error("broadcast ip not set for device", "username", claims.Username, "mac_address", id)
+		return
+	}
+
+	err = wol.SendMagicPacket(device.MACAddress, broadcastIP)
+	if err != nil {
+		writeRespErr(w, "magic packet failed to send", http.StatusInternalServerError)
+		slog.Error("magic packet failed to send", "username", claims.Username, "device", device, "error", err)
+		return
+	}
+	writeRespOk(w, "wake command sent", nil)
+	slog.Info("wake command sent to device", "username", claims.Username, "device", device)
 }

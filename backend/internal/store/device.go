@@ -13,17 +13,19 @@ type Device struct {
 	MACAddress  string `json:"mac_address"`           // unique identifier for the device
 	Name        string `json:"name"`                  // human-readable name for the device
 	Description string `json:"description,omitempty"` // optional description of the device
-	IPAddress   string `json:"ip_address,omitempty"`  // optional IP address of the device
+	IPAddress   string `json:"ip_address"`            // mandatory IP address of the device
+	BroadcastIP string `json:"broadcast_ip"`          // mandatory broadcast IP (e.g., 192.168.1.255:9)
 
 	Status Status `json:"status"` // current status of the device
 }
 
-func NewDevice(macAddress, name, description, ipAddress string, status Status) *Device {
+func NewDevice(macAddress, name, description, ipAddress, broadcastIP string, status Status) *Device {
 	return &Device{
 		MACAddress:  macAddress,
 		Name:        name,
 		Description: description,
 		IPAddress:   ipAddress,
+		BroadcastIP: broadcastIP,
 		Status:      status,
 	}
 }
