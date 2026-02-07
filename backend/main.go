@@ -6,18 +6,20 @@ import (
 	"log/slog"
 	"net/http"
 	"wolite/internal/api"
+	"wolite/internal/env"
 	"wolite/internal/store"
 	"wolite/internal/ui"
 )
 
 func main() {
+	config := env.LoadConfig()
 	mux := http.NewServeMux()
-
-	store, err := store.New("db.json")
+	store, err := store.New(config.DatabasePath)
 	if err != nil {
 		log.Fatalf("failed to initialized JSON database %v", err)
 	}
-	apiHandler := api.NewAPI(context.Background(), store)
+
+	apiHandler := api.NewAPI(context.Background(), store, config)
 
 	apiHandler.RegisterRoutesV1(mux)
 

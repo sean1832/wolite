@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/rand"
 	"fmt"
 
 	"github.com/pquerna/otp/totp"
@@ -18,6 +19,18 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func GenerateRandomString(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@)!()"
+	b := make([]byte, length)
+	for i := range b {
+		_, err := rand.Read(b[i : i+1])
+		if err != nil {
+			return "", fmt.Errorf("failed to generate random string: %w", err)
+		}
+	}
+	return string(b), nil
 }
 
 // GenerationOTPSecret generates a new OTP secret for a user and returns the secret and provisioning URL

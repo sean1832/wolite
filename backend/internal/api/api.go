@@ -3,18 +3,21 @@ package api
 import (
 	"context"
 	"net/http"
+	"wolite/internal/env"
 	"wolite/internal/store"
 )
 
 type API struct {
 	Context context.Context
 	store   *store.Store
+	config  *env.Config
 }
 
-func NewAPI(ctx context.Context, store *store.Store) *API {
+func NewAPI(ctx context.Context, store *store.Store, config *env.Config) *API {
 	return &API{
 		Context: ctx,
 		store:   store,
+		config:  config,
 	}
 }
 
