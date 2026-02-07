@@ -1,0 +1,28 @@
+meta {
+  name: UpdateDevice
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{BASE}}/devices/{{id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "pc2",
+    "description": "this is my gaming rig",
+    "ip_address": "192.168.1.31"
+  }
+}
+
+vars:pre-request {
+  id: aa:bb:cc:dd:ee:11
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

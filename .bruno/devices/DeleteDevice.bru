@@ -1,0 +1,20 @@
+meta {
+  name: DeleteDevice
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{BASE}}/devices/{{id}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  id: aa:bb:cc:dd:ee:11
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
