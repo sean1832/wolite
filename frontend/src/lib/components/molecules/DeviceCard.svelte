@@ -67,7 +67,10 @@
 
   <div class="space-y-1 mb-6">
     <h3 class="font-medium text-sm tracking-tight text-foreground">{device.name}</h3>
-    <div class="flex flex-col gap-0.5">
+    {#if device.description}
+        <p class="text-xs text-muted-foreground truncate">{device.description}</p>
+    {/if}
+    <div class="flex flex-col gap-0.5 pt-1">
         <code class="text-[10px] text-muted-foreground/60 font-mono">{device.ip_address}</code>
     </div>
   </div>

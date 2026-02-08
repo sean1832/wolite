@@ -1,11 +1,11 @@
 // Device represents a network device that can be woken
 export interface Device {
-	mac_address: string;
-	name: string;
-	description?: string;
-	ip_address: string;
-	broadcast_ip: string;
-	status: 'online' | 'offline' | 'unknown' | 'error';
+  mac_address: string; // Unique identifier
+  name: string;
+  description?: string;
+  ip_address: string;
+  broadcast_ip: string; // For Wake-on-LAN
+  status: "online" | "offline" | "unknown" | "error";
 }
 
 // API Response wrapper from backend

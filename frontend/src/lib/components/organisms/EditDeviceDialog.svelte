@@ -6,10 +6,12 @@
 	import { deviceStore } from '$lib/stores/devices.svelte';
 	import type { Device } from '$lib/types';
 	import { untrack } from 'svelte';
+	import { Textarea } from '../ui/textarea';
 
 	let { open = $bindable(false), device }: { open: boolean; device: Device } = $props();
 
 	let name = $state(untrack(() => device.name));
+	let description = $state(untrack(() => device.description || ''));
 	let ip_address = $state(untrack(() => device.ip_address));
 	let broadcast_ip = $state(untrack(() => device.broadcast_ip));
 
@@ -17,6 +19,7 @@
 	$effect(() => {
 		if (device) {
 			name = device.name;
+			description = device.description || '';
 			ip_address = device.ip_address;
 			broadcast_ip = device.broadcast_ip;
 		}
@@ -25,7 +28,18 @@
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		try {
-			await deviceStore.updateDevice(fetch, device.mac_address, { name, ip_address, broadcast_ip });
+			// Default port to 9 if not specified
+            let finalBroadcastIp = broadcast_ip;
+            if (finalBroadcastIp && !finalBroadcastIp.includes(':')) {
+                finalBroadcastIp += ':9';
+            }
+
+			await deviceStore.updateDevice(fetch, device.mac_address, { 
+				name, 
+				description,
+				ip_address, 
+				broadcast_ip: finalBroadcastIp 
+			});
 			open = false;
 		} catch (err) {
 			// Error is already logged in store
@@ -52,6 +66,10 @@
 					required
 					class="col-span-3"
 				/>
+			</div>
+			<div class="grid gap-2">
+				<Label for="description">Description</Label>
+				<Textarea id="description" placeholder="e.g. Living Room PC" bind:value={description} class="col-span-3" />
 			</div>
 			<div class="grid gap-2">
 				<Label for="ip_address">IP Address</Label>

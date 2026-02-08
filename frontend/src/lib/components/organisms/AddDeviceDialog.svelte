@@ -5,24 +5,50 @@
     import { Label } from "$lib/components/ui/label";
     import { deviceStore } from "$lib/stores/devices.svelte";
     import { Plus } from '@lucide/svelte';
+	import { Textarea } from "../ui/textarea";
     
     let open = $state(false);
     let name = $state('');
+    let description = $state('');
     let ip_address = $state('');
     let mac_address = $state('');
     let broadcast_ip = $state('');
 
+    function handleIpInput(e: Event) {
+        const input = e.target as HTMLInputElement;
+        const value = input.value;
+        
+        // Simple heuristic: if it looks like an IP, suggest broadcast
+        // Matches roughly 3 segments of digits/dots
+        const parts = value.split('.');
+        if (parts.length >= 3) {
+            // Reconstruct subnet
+            const subnet = parts.slice(0, 3).join('.');
+            if (subnet.length > 0) {
+                 broadcast_ip = `${subnet}.255:9`;
+            }
+        }
+    }
+
     async function handleSubmit(e: Event) {
         e.preventDefault();
         try {
+            // Default port to 9 if not specified
+            let finalBroadcastIp = broadcast_ip;
+            if (finalBroadcastIp && !finalBroadcastIp.includes(':')) {
+                finalBroadcastIp += ':9';
+            }
+
             await deviceStore.addDevice(fetch, { 
                 name, 
+                description,
                 mac_address, 
                 ip_address, 
-                broadcast_ip 
+                broadcast_ip: finalBroadcastIp 
             });
             open = false;
             name = '';
+            description = '';
             ip_address = '';
             mac_address = '';
             broadcast_ip = '';
@@ -51,16 +77,27 @@
         
         <form onsubmit={handleSubmit} class="grid gap-6 py-4">
             <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input id="name" bind:value={name} placeholder="e.g. Workstation" required class="col-span-3" />
+                <Label for="device_name">Device Name</Label>
+                <Input id="device_name" bind:value={name} placeholder="e.g. Workstation" required class="col-span-3" />
+            </div>
+            <div class="grid gap-2">
+                <Label for="description">Description</Label>
+                <Textarea placeholder="e.g. Living Room PC" bind:value={description} class="col-span-3" />
             </div>
             <div class="grid gap-2">
                 <Label for="ip_address">IP Address</Label>
-                <Input id="ip_address" bind:value={ip_address} placeholder="192.168.1.10" required class="col-span-3" />
+                <Input 
+                    id="ip_address" 
+                    bind:value={ip_address} 
+                    oninput={handleIpInput}
+                    placeholder="192.168.1.10" 
+                    required 
+                    class="col-span-3" 
+                />
             </div>
             <div class="grid gap-2">
-                <Label for="mac_address">MAC Address</Label>
-                <Input id="mac_address" bind:value={mac_address} placeholder="AA:BB:CC:DD:EE:FF" required class="col-span-3" />
+                <Label for="mac">MAC</Label>
+                <Input id="mac" bind:value={mac_address} placeholder="AA:BB:CC:DD:EE:FF" required class="col-span-3" />
             </div>
             <div class="grid gap-2">
                 <Label for="broadcast_ip">Broadcast IP</Label>
