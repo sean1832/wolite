@@ -1,6 +1,19 @@
+<div align="center">
+
+<img src="https://github.com/sean1832/wolite/blob/main/.design/favicon.svg" alt="wolite logo" width="120" height="120">
+
 # Wolite
 
+![GitHub License](https://img.shields.io/github/license/sean1832/wolite)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://golang.org/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-5.0-FF3E00?logo=svelte)](https://kit.svelte.dev/)
+![GitHub Release](https://img.shields.io/github/v/release/sean1832/wolite)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://hub.docker.com/r/sean1832/wolite)
+
 Wolite is a lightweight, secure Wake-on-LAN (WoL) service that enables remote machine power control over the network.
+
+</div>
+
 
 ## Features
 
@@ -30,7 +43,14 @@ You can deploy Wolite quickly using Docker.
 
 ### Option 1: Docker Compose
 
-1.  Create a `docker-compose.yml` file:
+1.  Create a `data` directory to persist the database and set permission to user 65532:
+
+```bash
+mkdir data
+chown 65532:65532 data
+```
+
+2.  Create a `docker-compose.yml` file:
 
 ```yaml
 services:
@@ -42,7 +62,7 @@ services:
       - "8080:8080"
     volumes:
       # Mount a local directory to persist the database
-      # Ensure ./data is writable by user 65532 (or let Docker create it)
+      # Ensure ./data is writable by user 65532
       - ./data:/data
     environment:
       # Optional: Override database path within the container
@@ -59,7 +79,7 @@ services:
       - /tmp
 ```
 
-2.  Run the container:
+3.  Run the container:
 
 ```bash
 docker-compose up -d
