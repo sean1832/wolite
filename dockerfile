@@ -1,5 +1,7 @@
 # === Stage 1: Build Frontend ===
-FROM node:22-alpine AS frontend-builder
+# Use --platform=$BUILDPLATFORM to always run the build on the efficient native architecture (e.g. amd64)
+# The output (HTML/JS/CSS) is architecture-agnostic.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # Install dependencies first for better caching
@@ -11,7 +13,8 @@ COPY frontend/ .
 RUN npm run build
 
 # === Stage 2: Build Backend ===
-FROM golang:1.25-alpine AS backend-builder
+# Run the Go compiler on the native architecture for speed (Cross-Compilation)
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS backend-builder
 WORKDIR /app/backend
 
 # Install build dependencies
@@ -27,10 +30,14 @@ COPY --from=frontend-builder /app/frontend/build ./internal/ui/dist
 # Copy backend source code
 COPY backend/ .
 
-# Build the binary
+# Build the binary using cross-compilation
+# TARGETOS and TARGETARCH are automatically set by docker buildx
+ARG TARGETOS
+ARG TARGETARCH
+
 # -s -w: Strip debug information
 # CGO_ENABLED=0: Static binary
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -trimpath -o /app/wolite main.go
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w" -trimpath -o /app/wolite main.go
 
 # Create data directory with correct permissions
 RUN mkdir /app/data
