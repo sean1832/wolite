@@ -5,6 +5,7 @@
     import { ArrowLeft, User, Sun, Moon, LogOut, Settings } from "@lucide/svelte";
     import { toggleMode } from "mode-watcher";
     import { goto } from "$app/navigation";
+    import { authStore } from "$lib/stores/auth.svelte";
     
     let { title, subtitle, backHref = undefined, children = undefined, showAccount = true } = $props();
 </script>
@@ -51,7 +52,7 @@
                     <span>Toggle Theme</span>
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator />
-                <DropdownMenu.Item class="text-destructive focus:text-destructive">
+                <DropdownMenu.Item class="text-destructive focus:text-destructive" onclick={() => authStore.logout(fetch)}>
                     <LogOut class="mr-2 h-4 w-4" />
                     <span>Sign out</span>
                 </DropdownMenu.Item>
