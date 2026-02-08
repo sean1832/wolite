@@ -96,7 +96,7 @@ jobs:
             export GOOS=$GOOS
             export GOARCH=$GOARCH
             
-            (cd backend && go build -ldflags="-s -w" -trimpath -o "../bin/${BINARY_NAME}" .)
+            cd backend && go build -ldflags="-s -w" -trimpath -o "../bin/${BINARY_NAME}" . && cd ..
             
             # Package the binary
             if [ "$GOOS" = "windows" ]; then
