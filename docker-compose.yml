@@ -11,8 +11,6 @@ services:
       # Ensure ./data is writable by user 65532 (or let Docker create it)
       - ./data:/data
     environment:
-      # Optional: Override default port (container internal port is fixed at 8080)
-      - PORT=8080
       # Optional: Override database path within the container
       - DATABASE_PATH=/data/wolite.json
       # Optional: Set JWT secret (if not set, a random one is generated on startup)
