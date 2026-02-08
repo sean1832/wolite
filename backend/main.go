@@ -35,8 +35,8 @@ func main() {
 		handler = api.Cors(mux)
 	}
 
-	slog.Info("Server starting", "url", "http://localhost:8080")
-	err = http.ListenAndServe(":8080", handler)
+	slog.Info("Server starting", "port", config.Port)
+	err = http.ListenAndServe(":"+config.Port, handler)
 	if err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

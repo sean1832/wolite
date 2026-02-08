@@ -57,15 +57,16 @@ services:
     image: sean1832/wolite:latest
     container_name: wolite
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    network_mode: host
     volumes:
       # Mount a local directory to persist the database
-      # Ensure ./data is writable by user 65532
+      # Ensure ./data is writable by user 65532 (or let Docker create it)
       - ./data:/data
     environment:
       # Optional: Override database path within the container
       - DATABASE_PATH=/data/wolite.json
+      # Optional: Set the port (default: 8080)
+      - PORT=8080
       # Optional: Set JWT secret (if not set, a random one is generated on startup)
       # - JWT_SECRET=your-secure-random-string
       # Optional: Set JWT expiry in seconds (default: 7 days)

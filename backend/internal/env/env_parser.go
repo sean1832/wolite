@@ -16,6 +16,7 @@ type Config struct {
 	DatabasePath string
 	JWTExpiry    time.Duration
 	DevMode      bool
+	Port         string
 }
 
 func LoadConfig() *Config {
@@ -57,10 +58,16 @@ func LoadConfig() *Config {
 		slog.Info("DEV_MODE enabled - CORS will be allowed")
 	}
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	return &Config{
 		JWTSecret:    jwtToken,
 		DatabasePath: os.Getenv("DATABASE_PATH"),
 		JWTExpiry:    time.Duration(jwtExpiry) * time.Second,
 		DevMode:      devMode,
+		Port:         port,
 	}
 }
