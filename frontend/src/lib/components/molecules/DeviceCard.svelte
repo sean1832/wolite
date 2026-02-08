@@ -5,6 +5,7 @@
   import { Button } from '$lib/components/ui/button';
   import { MoreHorizontal, Power } from '@lucide/svelte';
   import { cn } from '$lib/utils';
+  import { page } from '$app/stores';
   
   import EditDeviceDialog from '$lib/components/organisms/EditDeviceDialog.svelte';
   
@@ -20,9 +21,13 @@
 
   let isOnline = $derived(device.status === 'online');
 
-  function handleWake() {
+  async function handleWake() {
       if (isOnline) return;
-      deviceStore.wakeDevice(device.id);
+      try {
+        await deviceStore.wakeDevice(fetch, device.mac_address);
+      } catch (err) {
+        // Error is already logged in store
+      }
   }
 </script>
 
@@ -45,7 +50,13 @@
       <DropdownMenu.Content align="end" class="w-32">
         <DropdownMenu.Item onclick={() => isEditDialogOpen = true}>Edit</DropdownMenu.Item>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item class="text-destructive focus:text-destructive" onclick={() => deviceStore.removeDevice(device.id)}>
+        <DropdownMenu.Item class="text-destructive focus:text-destructive" onclick={async () => {
+          try {
+            await deviceStore.removeDevice(fetch, device.mac_address);
+          } catch (err) {
+            // Error is already logged in store
+          }
+        }}>
             Delete
         </DropdownMenu.Item>
       </DropdownMenu.Content>
@@ -57,7 +68,7 @@
   <div class="space-y-1 mb-6">
     <h3 class="font-medium text-sm tracking-tight text-foreground">{device.name}</h3>
     <div class="flex flex-col gap-0.5">
-        <code class="text-[10px] text-muted-foreground/60 font-mono">{device.ip}</code>
+        <code class="text-[10px] text-muted-foreground/60 font-mono">{device.ip_address}</code>
     </div>
   </div>
 

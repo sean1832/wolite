@@ -6,6 +6,11 @@
 	import Header from '$lib/components/organisms/Header.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { UserIcon } from '@lucide/svelte';
+	import { onMount } from 'svelte';
+
+	onMount(async () => {
+		await deviceStore.init(fetch);
+	});
 </script>
 
 <div class="container mx-auto max-w-6xl space-y-8 px-6 py-20">
@@ -20,7 +25,7 @@
 	</Header>
 
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-		{#each deviceStore.devices as device (device.id)}
+		{#each deviceStore.devices as device (device.mac_address)}
 			<DeviceCard {device} />
 		{/each}
 

@@ -8,16 +8,27 @@
     
     let open = $state(false);
     let name = $state('');
-    let ip = $state('');
-    let mac = $state('');
+    let ip_address = $state('');
+    let mac_address = $state('');
+    let broadcast_ip = $state('');
 
-    function handleSubmit(e: Event) {
+    async function handleSubmit(e: Event) {
         e.preventDefault();
-        deviceStore.addDevice({ name, ip, mac });
-        open = false;
-        name = '';
-        ip = '';
-        mac = '';
+        try {
+            await deviceStore.addDevice(fetch, { 
+                name, 
+                mac_address, 
+                ip_address, 
+                broadcast_ip 
+            });
+            open = false;
+            name = '';
+            ip_address = '';
+            mac_address = '';
+            broadcast_ip = '';
+        } catch (err) {
+            // Error is already logged in store
+        }
     }
 </script>
 
@@ -44,12 +55,16 @@
                 <Input id="name" bind:value={name} placeholder="e.g. Workstation" required class="col-span-3" />
             </div>
             <div class="grid gap-2">
-                <Label for="ip">IP Address</Label>
-                <Input id="ip" bind:value={ip} placeholder="192.168.1.10" required class="col-span-3" />
+                <Label for="ip_address">IP Address</Label>
+                <Input id="ip_address" bind:value={ip_address} placeholder="192.168.1.10" required class="col-span-3" />
             </div>
             <div class="grid gap-2">
-                <Label for="mac">MAC Address</Label>
-                <Input id="mac" bind:value={mac} placeholder="AA:BB:CC:DD:EE:FF" required class="col-span-3" />
+                <Label for="mac_address">MAC Address</Label>
+                <Input id="mac_address" bind:value={mac_address} placeholder="AA:BB:CC:DD:EE:FF" required class="col-span-3" />
+            </div>
+            <div class="grid gap-2">
+                <Label for="broadcast_ip">Broadcast IP</Label>
+                <Input id="broadcast_ip" bind:value={broadcast_ip} placeholder="192.168.1.255:9" required class="col-span-3" />
             </div>
 
             <Dialog.Footer>
