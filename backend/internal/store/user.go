@@ -80,3 +80,10 @@ func (s *Store) UpdateUser(u User) error {
 	// Persistence: Flush to disk
 	return s.flush()
 }
+
+// HasUsers returns true if at least one user exists in the store.
+func (s *Store) HasUsers() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return len(s.users) > 0
+}

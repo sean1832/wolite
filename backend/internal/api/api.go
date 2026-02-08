@@ -36,12 +36,6 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 		a.Auth,
 	}
 
-	// Add CORS middleware in development mode
-	if a.config.DevMode {
-		standard = append([]middleware{Cors}, standard...)
-		authStack = append([]middleware{Cors}, authStack...)
-	}
-
 	// Helper to apply middleware
 	handle := func(pattern string, handler func(http.ResponseWriter, *http.Request), middlewares []middleware) {
 		h := http.HandlerFunc(handler)
@@ -77,7 +71,8 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 	handleAuth("POST "+p+"/devices/{id}/wake", a.handleDeviceWake) // wake a specific device by ID
 
 	// Auth routes
-	handleAuth("GET "+p+"/auth/status", a.handleAuthStatus)    // check if the user is authenticated
-	handlePublic("POST "+p+"/auth/login", a.handleAuthLogin)   // login with username and password (optionally OTP)
-	handlePublic("POST "+p+"/auth/logout", a.handleAuthLogout) // logout the user
+	handleAuth("GET "+p+"/auth/status", a.handleAuthStatus)             // check if the user is authenticated
+	handlePublic("POST "+p+"/auth/login", a.handleAuthLogin)            // login with username and password (optionally OTP)
+	handlePublic("GET "+p+"/auth/initialized", a.handleAuthInitialized) // check if app has users
+	handlePublic("POST "+p+"/auth/logout", a.handleAuthLogout)          // logout the user
 }

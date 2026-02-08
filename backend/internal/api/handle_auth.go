@@ -89,3 +89,9 @@ func (a *API) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 
 	writeRespOk(w, "authenticated", authResponse{Status: "authenticated", User: claims.Username})
 }
+
+// handleAuthInitialized checks if the application has been initialized (has users)
+func (a *API) handleAuthInitialized(w http.ResponseWriter, r *http.Request) {
+	initialized := a.store.HasUsers()
+	writeRespOk(w, "ok", map[string]bool{"initialized": initialized})
+}

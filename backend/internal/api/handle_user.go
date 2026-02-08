@@ -94,6 +94,23 @@ func (a *API) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		writeRespErr(w, "System error", http.StatusInternalServerError)
 		return
 	}
+	// Auto-login: Generate JWT token and set cookie
+	tokenString, expirationTime, err := auth.GenerateJWTToken(user.Username, []byte(a.config.JWTSecret), a.config.JWTExpiry)
+	if err != nil {
+		slog.Error("Failed to generate token during auto-login", "error", err)
+		// Don't fail the request, just don't auto-login
+	} else {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    tokenString,
+			Expires:  expirationTime,
+			HttpOnly: true,
+			Path:     "/",
+			SameSite: http.SameSiteStrictMode,
+			// Secure:   true, // TODO: Enable in production
+		})
+	}
+
 	if payload.UseOTP {
 		// Return OTP provisioning URL for user to set up their authenticator app
 		writeRespWithStatus(w, "User created with OTP", map[string]string{"otp_url": otpUrl}, http.StatusCreated)

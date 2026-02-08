@@ -30,8 +30,13 @@ func main() {
 	}
 	mux.Handle("/", uiHandler)
 
+	var handler http.Handler = mux
+	if config.DevMode {
+		handler = api.Cors(mux)
+	}
+
 	slog.Info("Server starting", "url", "http://localhost:8080")
-	err = http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":8080", handler)
 	if err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
