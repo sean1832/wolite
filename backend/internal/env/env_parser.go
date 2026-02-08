@@ -15,6 +15,7 @@ type Config struct {
 	JWTSecret    string
 	DatabasePath string
 	JWTExpiry    time.Duration
+	DevMode      bool
 }
 
 func LoadConfig() *Config {
@@ -47,9 +48,16 @@ func LoadConfig() *Config {
 	}
 	slog.Info("JWT_EXPIRY_SECONDS", "value", strconv.Itoa(jwtExpiry))
 
+	devMode := false
+	if os.Getenv("DEV_MODE") == "true" {
+		devMode = true
+		slog.Info("DEV_MODE enabled - CORS will be allowed")
+	}
+
 	return &Config{
 		JWTSecret:    jwtToken,
 		DatabasePath: os.Getenv("DATABASE_PATH"),
 		JWTExpiry:    time.Duration(jwtExpiry) * time.Second,
+		DevMode:      devMode,
 	}
 }

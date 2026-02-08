@@ -36,6 +36,12 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 		a.Auth,
 	}
 
+	// Add CORS middleware in development mode
+	if a.config.DevMode {
+		standard = append([]middleware{Cors}, standard...)
+		authStack = append([]middleware{Cors}, authStack...)
+	}
+
 	// Helper to apply middleware
 	handle := func(pattern string, handler func(http.ResponseWriter, *http.Request), middlewares []middleware) {
 		h := http.HandlerFunc(handler)
