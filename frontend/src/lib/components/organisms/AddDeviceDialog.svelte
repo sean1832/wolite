@@ -7,7 +7,8 @@
     import { Plus } from '@lucide/svelte';
 	import { Textarea } from "../ui/textarea";
     
-    let open = $state(false);
+    let { open = $bindable(false), trigger = undefined } = $props();
+
     let name = $state('');
     let description = $state('');
     let ip_address = $state('');
@@ -61,10 +62,14 @@
 <Dialog.Root bind:open>
     <Dialog.Trigger>
         {#snippet child({ props })}
-            <Button {...props} size="sm" class="h-9 gap-2 px-4 shadow-sm">
-                <Plus class="w-4 h-4" />
-                <span>Add Device</span>
-            </Button>
+            {#if trigger}
+                {@render trigger(props)}
+            {:else}
+                <Button {...props} size="sm" class="h-9 gap-2 px-4 shadow-sm border border-border/50">
+                    <Plus class="w-4 h-4" />
+                    <span>Add Device</span>
+                </Button>
+            {/if}
         {/snippet}
     </Dialog.Trigger>
     <Dialog.Content class="sm:max-w-[425px]">

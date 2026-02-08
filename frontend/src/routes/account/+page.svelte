@@ -151,7 +151,7 @@
 </script>
 
 <div class="container mx-auto max-w-lg px-6 py-20">
-	<Header title="Account" subtitle="Manage your credentials and security." backHref="/">
+	<Header title="Account" subtitle="Manage your credentials and security." backHref="/" showAccount={false}>
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
