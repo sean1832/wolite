@@ -75,11 +75,7 @@ func (a *API) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		otpUrl = url
-<<<<<<< HEAD
-		user.OTP = secret
-=======
 		user.PendingOTP = secret // Store in pending until verified
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	}
 	if err != nil {
 		// Ensure NewUser doesn't return sensitive system errors
@@ -98,8 +94,6 @@ func (a *API) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		writeRespErr(w, "System error", http.StatusInternalServerError)
 		return
 	}
-<<<<<<< HEAD
-=======
 	// Auto-login: Generate JWT token and set cookie
 	tokenString, expirationTime, err := auth.GenerateJWTToken(user.Username, []byte(a.config.JWTSecret), a.config.JWTExpiry)
 	if err != nil {
@@ -117,7 +111,6 @@ func (a *API) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	if payload.UseOTP {
 		// Return OTP provisioning URL for user to set up their authenticator app
 		writeRespWithStatus(w, "User created with OTP", map[string]string{"otp_url": otpUrl}, http.StatusCreated)
@@ -130,12 +123,6 @@ func (a *API) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
-<<<<<<< HEAD
-	payload := struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-		OTP      string `json:"otp,omitempty"` // optional OTP for 2FA
-=======
 	claims := GetUserFromContext(r.Context())
 	if claims == nil {
 		slog.Error("claims missing from context", "path", r.URL.Path)
@@ -148,7 +135,6 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 		Password    string `json:"password"`
 		OldPassword string `json:"old_password,omitempty"`
 		UseOTP      bool   `json:"use_otp,omitempty"` // optional flag to indicate if user wants to use OTP
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	}{}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -157,12 +143,6 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-<<<<<<< HEAD
-	user, err := a.store.FindUser(payload.Username)
-	if err != nil {
-		writeRespErr(w, "User not found", http.StatusNotFound)
-		slog.Error("User not found", "username", payload.Username, "error", err)
-=======
 	// Determine if username change is requested (not supported yet, but for completeness)
 	if payload.Username != "" && payload.Username != claims.Username {
 		writeRespErr(w, "Forbidden: Cannot change username", http.StatusForbidden)
@@ -172,17 +152,10 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 	user, err := a.store.FindUser(claims.Username)
 	if err != nil {
 		writeRespErr(w, "User not found", http.StatusNotFound)
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 		return
 	}
 
 	if payload.Password != "" {
-<<<<<<< HEAD
-		user.Password = payload.Password
-	}
-	if payload.OTP != "" {
-		user.OTP = payload.OTP
-=======
 		// Secure Password Change Flow
 		if payload.OldPassword == "" {
 			writeRespErr(w, "Current password is required to set a new password", http.StatusBadRequest)
@@ -212,7 +185,6 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 		user.PendingOTP = secret // Store in pending until verified
 		otpUrl = url
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	}
 
 	if err := a.store.UpdateUser(user); err != nil {
@@ -221,11 +193,6 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-<<<<<<< HEAD
-	writeRespWithStatus(w, "User updated", nil, http.StatusOK)
-	slog.Info("User updated", "username", payload.Username)
-}
-=======
 	if payload.UseOTP {
 		writeRespWithStatus(w, "User updated with OTP", map[string]string{"otp_url": otpUrl}, http.StatusOK)
 		slog.Info("User updated with OTP", "username", payload.Username)
@@ -280,4 +247,3 @@ func (a *API) handleUserOTPVerify(w http.ResponseWriter, r *http.Request) {
 	writeRespOk(w, "2FA enabled successfully", nil)
 	slog.Info("2FA verified and enabled", "username", claims.Username)
 }
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de

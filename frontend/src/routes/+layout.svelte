@@ -1,12 +1,6 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
-<<<<<<< HEAD
-	import { ModeWatcher } from "mode-watcher";
-	import { Toaster } from "$lib/components/ui/sonner";
-
-	let { children } = $props();
-=======
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { authStore } from '$lib/stores/auth.svelte';
@@ -48,7 +42,6 @@
 	onMount(async () => {
 		await authStore.init(fetch);
 	});
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>

@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-export interface Device {
-	id: string;
-	name: string;
-	ip: string;
-	mac: string;
-	status: 'online' | 'offline' | 'waking' | 'unknown';
-=======
 // Device represents a network device that can be woken
 export interface Device {
   mac_address: string; // Unique identifier
@@ -33,5 +25,4 @@ export interface User {
 export interface AuthResponse {
 	qr_code?: string; // base64 encoded QR code image for OTP setup
 	secret?: string; // OTP secret (only during setup)
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 }

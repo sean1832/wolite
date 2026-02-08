@@ -1,26 +1,5 @@
 package api
 
-<<<<<<< HEAD
-import "net/http"
-
-func (a *API) handleDevices(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (a *API) handleDeviceGet(w http.ResponseWriter, r *http.Request) {
-}
-
-func (a *API) handleDeviceCreate(w http.ResponseWriter, r *http.Request) {
-}
-
-func (a *API) handleDeviceUpdate(w http.ResponseWriter, r *http.Request) {
-}
-
-func (a *API) handleDeviceDelete(w http.ResponseWriter, r *http.Request) {
-}
-
-func (a *API) handleDeviceWake(w http.ResponseWriter, r *http.Request) {
-=======
 import (
 	"encoding/json"
 	"errors"
@@ -299,5 +278,4 @@ func (a *API) handleDeviceWake(w http.ResponseWriter, r *http.Request) {
 	}
 	writeRespOk(w, "wake command sent", nil)
 	slog.Info("wake command sent to device", "username", claims.Username, "device", device)
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 }

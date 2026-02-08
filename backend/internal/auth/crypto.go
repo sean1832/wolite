@@ -1,10 +1,7 @@
 package auth
 
 import (
-<<<<<<< HEAD
-=======
 	"crypto/rand"
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	"fmt"
 
 	"github.com/pquerna/otp/totp"
@@ -24,8 +21,6 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-<<<<<<< HEAD
-=======
 func GenerateRandomString(length int) (string, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@)!()"
 	b := make([]byte, length)
@@ -38,7 +33,6 @@ func GenerateRandomString(length int) (string, error) {
 	return string(b), nil
 }
 
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 // GenerationOTPSecret generates a new OTP secret for a user and returns the secret and provisioning URL
 func GenerateOTPSecret(username string) (secret string, url string, err error) {
 	key, err := totp.Generate(totp.GenerateOpts{

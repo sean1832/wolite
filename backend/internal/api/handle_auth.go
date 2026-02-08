@@ -1,16 +1,5 @@
 package api
 
-<<<<<<< HEAD
-import "net/http"
-
-func (a *API) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
-}
-
-func (a *API) handleAuthLogout(w http.ResponseWriter, r *http.Request) {
-}
-
-func (a *API) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
-=======
 import (
 	"encoding/json"
 	"log/slog"
@@ -113,5 +102,4 @@ func (a *API) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 func (a *API) handleAuthInitialized(w http.ResponseWriter, r *http.Request) {
 	initialized := a.store.HasUsers()
 	writeRespOk(w, "ok", map[string]bool{"initialized": initialized})
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 }

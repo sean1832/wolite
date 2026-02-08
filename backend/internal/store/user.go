@@ -3,17 +3,10 @@ package store
 import "fmt"
 
 type User struct {
-<<<<<<< HEAD
-	Username string `json:"username"`
-	Password string `json:"password"`
-	OTP      string `json:"otp,omitempty"`
-	Devices  []int  `json:"devices,omitempty"` // list of device IDs the user has access to
-=======
 	Username   string `json:"username"`
 	Password   string `json:"password"`
 	OTP        string `json:"otp,omitempty"`
 	PendingOTP string `json:"pending_otp,omitempty"` // Temp storage for OTP verification
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 }
 
 func NewUser(username, password string) (*User, error) {
@@ -40,8 +33,6 @@ func NewUserWithOTP(username, password, otp string) (*User, error) {
 		OTP:      otp,
 	}, nil
 }
-<<<<<<< HEAD
-=======
 
 // FindUser returns a copy of the user.
 // It returns a value (User), not a pointer, ensuring immutability of the internal cache.
@@ -97,4 +88,3 @@ func (s *Store) HasUsers() bool {
 	defer s.mu.RUnlock()
 	return len(s.users) > 0
 }
->>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
