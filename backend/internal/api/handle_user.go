@@ -75,7 +75,7 @@ func (a *API) handleUserCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		otpUrl = url
-		user.OTP = secret
+		user.PendingOTP = secret // Store in pending until verified
 	}
 	if err != nil {
 		// Ensure NewUser doesn't return sensitive system errors
@@ -131,9 +131,10 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-		UseOTP   bool   `json:"use_otp,omitempty"` // optional flag to indicate if user wants to use OTP
+		Username    string `json:"username"`
+		Password    string `json:"password"`
+		OldPassword string `json:"old_password,omitempty"`
+		UseOTP      bool   `json:"use_otp,omitempty"` // optional flag to indicate if user wants to use OTP
 	}{}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -142,21 +143,37 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if payload.Username != claims.Username {
-		writeRespErr(w, "Forbidden", http.StatusForbidden)
-		slog.Warn("user attempted to update another user", "user", claims.Username, "target", payload.Username)
+	// Determine if username change is requested (not supported yet, but for completeness)
+	if payload.Username != "" && payload.Username != claims.Username {
+		writeRespErr(w, "Forbidden: Cannot change username", http.StatusForbidden)
 		return
 	}
 
 	user, err := a.store.FindUser(claims.Username)
 	if err != nil {
 		writeRespErr(w, "User not found", http.StatusNotFound)
-		slog.Error("User not found", "username", payload.Username, "error", err)
 		return
 	}
 
 	if payload.Password != "" {
-		user.Password = payload.Password
+		// Secure Password Change Flow
+		if payload.OldPassword == "" {
+			writeRespErr(w, "Current password is required to set a new password", http.StatusBadRequest)
+			return
+		}
+
+		if !auth.CheckPasswordHash(payload.OldPassword, user.Password) {
+			writeRespErr(w, "Invalid current password", http.StatusUnauthorized)
+			return
+		}
+
+		hashedPassword, err := auth.HashPassword(payload.Password)
+		if err != nil {
+			slog.Error("Password hashing failed", "error", err)
+			writeRespErr(w, "System error", http.StatusInternalServerError)
+			return
+		}
+		user.Password = hashedPassword
 	}
 	var otpUrl string
 	if payload.UseOTP {
@@ -166,7 +183,7 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 			writeRespErr(w, "System error", http.StatusInternalServerError)
 			return
 		}
-		user.OTP = secret
+		user.PendingOTP = secret // Store in pending until verified
 		otpUrl = url
 	}
 
@@ -184,4 +201,49 @@ func (a *API) handleUserUpdate(w http.ResponseWriter, r *http.Request) {
 
 	writeRespWithStatus(w, "User updated", nil, http.StatusOK)
 	slog.Info("User updated", "username", payload.Username)
+}
+
+func (a *API) handleUserOTPVerify(w http.ResponseWriter, r *http.Request) {
+	claims := GetUserFromContext(r.Context())
+	if claims == nil {
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	payload := struct {
+		Code string `json:"code"`
+	}{}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeRespErr(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	user, err := a.store.FindUser(claims.Username)
+	if err != nil {
+		writeRespErr(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	if user.PendingOTP == "" {
+		writeRespErr(w, "No pending OTP setup found", http.StatusBadRequest)
+		return
+	}
+
+	if !auth.Validate2FA(payload.Code, user.PendingOTP) {
+		writeRespErr(w, "Invalid OTP code", http.StatusBadRequest)
+		return
+	}
+
+	// Code is valid, promote PendingOTP to OTP
+	user.OTP = user.PendingOTP
+	user.PendingOTP = ""
+
+	if err := a.store.UpdateUser(user); err != nil {
+		writeRespErr(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
+	writeRespOk(w, "2FA enabled successfully", nil)
+	slog.Info("2FA verified and enabled", "username", claims.Username)
 }

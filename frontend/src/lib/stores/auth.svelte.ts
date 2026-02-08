@@ -23,9 +23,9 @@ class AuthStore {
 			// Check initialization status first or in parallel
 			const initPromise = this.checkInitialized(fetch);
 			
-			const response = await http.get<{ status: string; user: string }>(fetch, '/auth/status');
+			const response = await http.get<{ status: string; user: string; has_otp: boolean }>(fetch, '/auth/status');
 			// Convert backend response to internal User type
-			this.user = { username: response.user || '', has_otp: false }; 
+			this.user = { username: response.user || '', has_otp: response.has_otp }; 
 			
 			await initPromise;
 		} catch (error) {
@@ -38,8 +38,8 @@ class AuthStore {
 	}
 
 	async login(fetch: typeof window.fetch, username: string, password: string, otp?: string) {
-		const result = await http.post<AuthResponse>(fetch, '/auth/login', { username, password, otp });
-		this.user = { username, has_otp: false }; // Optimistic update
+		const result = await http.post<AuthResponse & { has_otp: boolean }>(fetch, '/auth/login', { username, password, otp });
+		this.user = { username, has_otp: result.has_otp }; // Optimistic update from result
 		return result;
 	}
 

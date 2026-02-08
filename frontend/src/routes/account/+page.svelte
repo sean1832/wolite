@@ -9,6 +9,12 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { http } from '$lib/api';
+	import {
+		InputOTP,
+		InputOTPGroup,
+		InputOTPSeparator,
+		InputOTPSlot
+	} from "$lib/components/ui/input-otp";
 
 	import Header from '$lib/components/organisms/Header.svelte';
 
@@ -17,6 +23,7 @@
 	let loading = $state(false);
 	let newOtpQr = $state<string | null>(null);
 	let newOtpSecret = $state<string | null>(null);
+	let otpCode = $state('');
 
 	// Derived user state from authStore
 	let user = $derived(authStore.user || { username: 'Guest', has_otp: false });
@@ -25,6 +32,32 @@
 		loading = true;
 		await authStore.logout(fetch);
 		loading = false;
+	}
+
+	async function verifyOtp() {
+		if (otpCode.length !== 6) {
+			toast.error('Please enter a valid 6-digit code');
+			return;
+		}
+		
+		loading = true;
+		try {
+			await http.post(fetch, '/users/otp/verify', { code: otpCode });
+			toast.success('2FA Verified & Enabled!');
+			
+			// Refresh user state
+			await authStore.init(fetch);
+			
+			// Close dialog
+			isOtpOpen = false;
+			newOtpQr = null;
+			newOtpSecret = null;
+			otpCode = '';
+		} catch (err: any) {
+			toast.error(err.message || 'Verification failed');
+		} finally {
+			loading = false;
+		}
 	}
 
 	async function handleUpdate(
@@ -72,9 +105,11 @@
 			payload.username = user.username;
 
 			// Now apply changes:
+			// Now apply changes:
 			if (type === 'password') {
 				// For password change
 				payload.password = formData?.get('newPassword');
+				payload.old_password = formData?.get('currentPassword');
 			}
 			// For OTP toggles, we set use_otp
 
@@ -190,13 +225,26 @@
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
-				handleUpdate('password', new FormData(e.currentTarget));
+				const formData = new FormData(e.currentTarget);
+				if (formData.get('newPassword') !== formData.get('confirmPassword')) {
+					toast.error('New passwords do not match');
+					return;
+				}
+				handleUpdate('password', formData);
 			}}
 			class="grid gap-4 py-4"
 		>
 			<div class="grid gap-2">
+				<Label for="currentPassword">Current Password</Label>
+				<Input id="currentPassword" name="currentPassword" type="password" required />
+			</div>
+			<div class="grid gap-2">
 				<Label for="newPassword">New Password</Label>
 				<Input id="newPassword" name="newPassword" type="password" required />
+			</div>
+			<div class="grid gap-2">
+				<Label for="confirmPassword">Confirm New Password</Label>
+				<Input id="confirmPassword" name="confirmPassword" type="password" required />
 			</div>
 
 			<Dialog.Footer>
@@ -238,7 +286,33 @@
 					</div>
 				{/if}
 
-				<Button variant="outline" class="w-full" onclick={() => (isOtpOpen = false)}>Done</Button>
+				<div class="space-y-2 text-center">
+					<Label for="account-otp-verify">Enter Verification Code</Label>
+					<div class="flex flex-col items-center gap-4">
+						<InputOTP maxlength={6} bind:value={otpCode}>
+							{#snippet children({ cells })}
+								<InputOTPGroup>
+									{#each cells.slice(0, 3) as cell}
+										<InputOTPSlot {cell} />
+									{/each}
+								</InputOTPGroup>
+								<InputOTPSeparator />
+								<InputOTPGroup>
+									{#each cells.slice(3, 6) as cell}
+										<InputOTPSlot {cell} />
+									{/each}
+								</InputOTPGroup>
+							{/snippet}
+						</InputOTP>
+						
+						<Button onclick={verifyOtp} disabled={loading || otpCode.length !== 6} class="w-full">
+							{#if loading}<Loader2 class="mr-2 h-4 w-4 animate-spin" />{/if}
+							Verify & Enable
+						</Button>
+					</div>
+				</div>
+
+				<Button variant="ghost" class="w-full text-muted-foreground" onclick={() => (isOtpOpen = false)}>Cancel</Button>
 			</div>
 		{:else}
 			{#if user.has_otp}

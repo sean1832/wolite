@@ -57,8 +57,9 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 	}
 
 	// User routes
-	handlePublic("POST "+p+"/users", a.handleUserCreate) // create a new user (for initial setup)
-	handleAuth("PUT "+p+"/users", a.handleUserUpdate)    // update the user (e.g. change password)
+	handlePublic("POST "+p+"/users", a.handleUserCreate)             // create a new user (for initial setup)
+	handleAuth("PUT "+p+"/users", a.handleUserUpdate)                // update the user (e.g. change password)
+	handleAuth("POST "+p+"/users/otp/verify", a.handleUserOTPVerify) // verify and enable OTP
 
 	// Device routes
 	handleAuth("GET "+p+"/devices", a.handleDevicesGetAll)        // list all devices the user has access to

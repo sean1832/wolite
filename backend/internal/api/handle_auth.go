@@ -16,6 +16,7 @@ type loginRequest struct {
 type authResponse struct {
 	Status string `json:"status"`
 	User   string `json:"user,omitempty"`
+	HasOTP bool   `json:"has_otp"` // Confirmed 2FA enabled?
 }
 
 func (a *API) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +66,7 @@ func (a *API) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
 		// Secure:   true, // TODO: Enable in production
 	})
 
-	writeRespOk(w, "authenticated", authResponse{Status: "authenticated", User: user.Username})
+	writeRespOk(w, "authenticated", authResponse{Status: "authenticated", User: user.Username, HasOTP: user.OTP != ""})
 }
 
 func (a *API) handleAuthLogout(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +88,14 @@ func (a *API) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeRespOk(w, "authenticated", authResponse{Status: "authenticated", User: claims.Username})
+	user, err := a.store.FindUser(claims.Username)
+	if err != nil {
+		slog.Error("User from token not found", "username", claims.Username)
+		writeRespErr(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
+	writeRespOk(w, "authenticated", authResponse{Status: "authenticated", User: user.Username, HasOTP: user.OTP != ""})
 }
 
 // handleAuthInitialized checks if the application has been initialized (has users)

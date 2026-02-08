@@ -3,9 +3,10 @@ package store
 import "fmt"
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	OTP      string `json:"otp,omitempty"`
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	OTP        string `json:"otp,omitempty"`
+	PendingOTP string `json:"pending_otp,omitempty"` // Temp storage for OTP verification
 }
 
 func NewUser(username, password string) (*User, error) {

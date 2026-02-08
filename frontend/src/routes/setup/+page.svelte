@@ -8,6 +8,12 @@
 	import { toast } from 'svelte-sonner';
 	import { http } from '$lib/api';
 	import { authStore } from '$lib/stores/auth.svelte';
+	import {
+		InputOTP,
+		InputOTPGroup,
+		InputOTPSeparator,
+		InputOTPSlot
+	} from "$lib/components/ui/input-otp";
 
 	let setupOTP = $state(false);
 	let username = $state('');
@@ -63,9 +69,26 @@
 		}
 	}
 
-	async function finishSetup() {
-		await authStore.init(fetch);
-		goto('/');
+	let otpCode = $state('');
+	
+	async function verifyAndFinish() {
+		if (otpCode.length !== 6) {
+			error = 'Please enter a valid 6-digit code';
+			return;
+		}
+		
+		loading = true;
+		error = '';
+
+		try {
+			await http.post(fetch, '/users/otp/verify', { code: otpCode });
+			await authStore.init(fetch);
+			toast.success('2FA Verified! Setup complete.');
+			goto('/');
+		} catch (err: any) {
+			error = err.message || 'Verification failed';
+			loading = false;
+		}
 	}
 </script>
 
@@ -98,7 +121,33 @@
 					<div class="rounded bg-muted/30 p-3 font-mono text-xs select-all">
 						{otpData.secret}
 					</div>
-					<Button class="w-full" onclick={finishSetup}>I've Scanned It - Continue to Login</Button>
+					
+					<div class="flex justify-center">
+						<InputOTP maxlength={6} bind:value={otpCode}>
+							{#snippet children({ cells })}
+								<InputOTPGroup>
+									{#each cells.slice(0, 3) as cell}
+										<InputOTPSlot {cell} />
+									{/each}
+								</InputOTPGroup>
+								<InputOTPSeparator />
+								<InputOTPGroup>
+									{#each cells.slice(3, 6) as cell}
+										<InputOTPSlot {cell} />
+									{/each}
+								</InputOTPGroup>
+							{/snippet}
+						</InputOTP>
+					</div>
+
+					{#if error}
+						<p class="text-center text-sm text-destructive">{error}</p>
+					{/if}
+
+					<Button class="w-full" onclick={verifyAndFinish} disabled={loading || otpCode.length !== 6}>
+						{#if loading}<Loader2 class="mr-2 h-4 w-4 animate-spin" />{/if}
+						Verify & Complete Setup
+					</Button>
 				</div>
 			</div>
 		{:else}

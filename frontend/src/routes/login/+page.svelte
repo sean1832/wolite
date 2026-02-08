@@ -6,6 +6,12 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { toast } from 'svelte-sonner';
+	import {
+		InputOTP,
+		InputOTPGroup,
+		InputOTPSeparator,
+		InputOTPSlot
+	} from "$lib/components/ui/input-otp";
 
 	let usernameInput = $state('');
 	let passwordInput = $state('');
@@ -90,15 +96,23 @@
 							<KeyRound class="h-3.5 w-3.5" />
 							Authenticator Code
 						</Label>
-						<Input
-							id="otp-token"
-							name="otp-token"
-							bind:value={otpInput}
-							placeholder="000000"
-							class="text-center font-mono tracking-[0.5em]"
-							maxlength={6}
-							autofocus
-						/>
+						<div class="flex justify-center py-2">
+							<InputOTP maxlength={6} bind:value={otpInput}>
+								{#snippet children({ cells })}
+									<InputOTPGroup>
+										{#each cells.slice(0, 3) as cell}
+											<InputOTPSlot {cell} />
+										{/each}
+									</InputOTPGroup>
+									<InputOTPSeparator />
+									<InputOTPGroup>
+										{#each cells.slice(3, 6) as cell}
+											<InputOTPSlot {cell} />
+										{/each}
+									</InputOTPGroup>
+								{/snippet}
+							</InputOTP>
+						</div>
 					</div>
 				{/if}
 			</div>
