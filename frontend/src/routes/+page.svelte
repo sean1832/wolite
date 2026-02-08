@@ -21,9 +21,8 @@
 		<Header title="Wolite" subtitle="Control Center">
             <AddDeviceDialog bind:open={isAddDialogOpen}>
                 {#snippet trigger(props: any)}
-                    <Button variant="default" size="icon" class="hidden sm:flex h-9 w-9 rounded-full shadow-sm hover:shadow-md transition-all" {...props}>
-                        <Plus class="h-4 w-4" />
-                        <span class="sr-only">Add Device</span>
+                    <Button variant="default" size="icon" class="hidden sm:flex h-9 w-auto shadow-sm hover:shadow-md transition-all px-2" {...props}>
+                        <span>+ Add Device</span>
                     </Button>
                 {/snippet}
             </AddDeviceDialog>
