@@ -1,0 +1,25 @@
+meta {
+  name: CreateDevice
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{BASE}}/devices
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "mac_address": "aa-bb-cc-dd-ee-ff",
+    "name": "laptop",
+    "description": "this is my gaming rig",
+    "ip_address": "192.168.50.22"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

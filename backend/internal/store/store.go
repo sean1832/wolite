@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+<<<<<<< HEAD
 	"strconv"
+=======
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	"sync"
 )
 
@@ -13,8 +16,14 @@ type Store struct {
 	mu   sync.RWMutex
 	path string
 	// Internal cache
+<<<<<<< HEAD
 	users   map[string]User   // map for O(1) lookup
 	devices map[string]Device // map for O(1) lookup
+=======
+	users              map[string]User                         // map for O(1) lookup
+	devices            map[string]Device                       // map for O(1) lookup
+	userDeviceMappings map[string]map[string]UserDeviceMapping // map for O(1) lookup
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 }
 
 // New initializes the store.
@@ -24,9 +33,16 @@ func New(path string) (*Store, error) {
 	}
 
 	s := &Store{
+<<<<<<< HEAD
 		path:    path,
 		users:   make(map[string]User),
 		devices: make(map[string]Device),
+=======
+		path:               path,
+		users:              make(map[string]User),
+		devices:            make(map[string]Device),
+		userDeviceMappings: make(map[string]map[string]UserDeviceMapping),
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	}
 
 	// Load existing data if file exists
@@ -44,6 +60,7 @@ func New(path string) (*Store, error) {
 	return s, nil
 }
 
+<<<<<<< HEAD
 // FindUser returns a copy of the user.
 // It returns a value (User), not a pointer, ensuring immutability of the internal cache.
 func (s *Store) FindUser(username string) (User, error) {
@@ -92,15 +109,27 @@ func (s *Store) UpdateUser(u User) error {
 	return s.flush()
 }
 
+=======
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 // flush writes the memory state to disk atomically.
 func (s *Store) flush() error {
 	// Convert maps to slices for JSON marshaling
 	data := struct {
+<<<<<<< HEAD
 		Users   []User   `json:"users"`
 		Devices []Device `json:"devices"`
 	}{
 		Users:   make([]User, 0, len(s.users)),
 		Devices: make([]Device, 0, len(s.devices)),
+=======
+		Users              []User              `json:"users"`
+		Devices            []Device            `json:"devices"`
+		UserDeviceMappings []UserDeviceMapping `json:"user_device_mappings"`
+	}{
+		Users:              make([]User, 0, len(s.users)),
+		Devices:            make([]Device, 0, len(s.devices)),
+		UserDeviceMappings: make([]UserDeviceMapping, 0, len(s.userDeviceMappings)),
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	}
 
 	for _, u := range s.users {
@@ -109,6 +138,14 @@ func (s *Store) flush() error {
 	for _, d := range s.devices {
 		data.Devices = append(data.Devices, d)
 	}
+<<<<<<< HEAD
+=======
+	for _, mappings := range s.userDeviceMappings {
+		for _, m := range mappings {
+			data.UserDeviceMappings = append(data.UserDeviceMappings, m)
+		}
+	}
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 
 	// Atomic Write Pattern
 	tmp, err := os.CreateTemp(filepath.Dir(s.path), "db-tmp-*.json")
@@ -142,8 +179,14 @@ func (s *Store) load() error {
 
 	// Temp struct for decoding
 	var data struct {
+<<<<<<< HEAD
 		Users   []User   `json:"users"`
 		Devices []Device `json:"devices"`
+=======
+		Users             []User              `json:"users"`
+		Devices           []Device            `json:"devices"`
+		UserDeviceMapping []UserDeviceMapping `json:"user_device_mappings"`
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	}
 
 	if err := json.NewDecoder(f).Decode(&data); err != nil {
@@ -158,7 +201,19 @@ func (s *Store) load() error {
 
 	s.devices = make(map[string]Device, len(data.Devices))
 	for _, d := range data.Devices {
+<<<<<<< HEAD
 		s.devices[strconv.Itoa(d.ID)] = d
+=======
+		s.devices[d.MACAddress] = d
+	}
+
+	s.userDeviceMappings = make(map[string]map[string]UserDeviceMapping)
+	for _, m := range data.UserDeviceMapping {
+		if s.userDeviceMappings[m.Username] == nil {
+			s.userDeviceMappings[m.Username] = make(map[string]UserDeviceMapping)
+		}
+		s.userDeviceMappings[m.Username][m.MACAddress] = m
+>>>>>>> 783f6b3d4350d11bfa0b962a4329534f17ed71de
 	}
 
 	return nil

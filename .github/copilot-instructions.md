@@ -57,32 +57,48 @@ Dead code is deleted immediately, not commented out. Version control is the arch
 
 **Wolite** is a Wake-on-LAN (WoL) service that enables remote machine power control over the network. The application provides a simple, intuitive interface for users to remotely turn on their computers.
 
-**Security Considerations**
-Given the sensitive nature of remote power control, security is a critical design requirement:
+**Security & Simplicity**
 
-- Prevent unauthorized actors from controlling machines on the network
-- Implement authentication and authorization mechanisms
-- Consider network-level security (LAN access, VPN requirements)
-- Audit and log all wake requests for accountability
+- **JSON Storage**: For simplicity and robustness, the application uses a JSON-only database. This is sufficient for the intended scale (handful of machines) and minimizes operational complexity.
+- **Backend Responsibility**: The frontend **must not** contain any sensitive backend logic (e.g., password hashing, OTP generation, session management). All security-critical operations must be handled by the Go backend.
+- **Security Precautions**: Given the sensitive nature of remote power control, security is a critical design requirement. Prevent unauthorized actors from controlling machines and audit all wake requests.
 
 ## Architecture Overview
 
-Monorepo with two main directories:
+Wolite is a monorepo consisting of three main components:
 
-- `server/` - SvelteKit frontend application (main active codebase)
-- `client/` - Reserved for future client-side code
+1.  **Backend (`backend/`)**: A Go application that provides the API, manages the JSON database, and handles authentication/security.
+2.  **Frontend (`frontend/`)**: A SvelteKit application for the UI. It is built independently and then its output (`build/`) is copied to `backend/internal/ui/dist` to be embedded into the Go binary.
+3.  **Client (`client/`)**: (Planned) A lightweight background application for target machines to provide additional information (status) and commands (sleep, shutdown). Designed for minimal system impact.
+
+### Embedding Flow
+
+The frontend is built into the `frontend/build` folder, which is then mirrored to `backend/internal/ui/dist`. The Go backend embeds these assets using `go:embed`.
 
 ## Tech Stack
 
-- **Framework**: Svelte 5 + SvelteKit with TypeScript
-- **Styling**: Tailwind CSS v4 + tailwind-variants (`tv()`) for component variants
+- **Backend**: Go (API, JSON Database)
+- **Frontend**: Svelte 5 + SvelteKit with TypeScript
+- **Styling**: Tailwind CSS v4 + tailwind-variants (`tv()`)
 - **UI Library**: shadcn-svelte (bits-ui primitives)
 - **Icons**: @lucide/svelte
-- **Additional**: vaul-svelte (drawer), svelte-sonner (toasts), mode-watcher (dark mode)
+- **Build System**: [Taskfile](https://taskfile.dev) (`taskfile.yml`)
+- **Client**: (Planned) C/C++ (Preferred for minimal footprint) or Go (Backup)
+
+## Development Commands
+
+All development tasks are managed via `task`:
+
+```bash
+task build        # Build both frontend and backend
+task frontend     # Build frontend and copy to backend dist
+task backend      # Build Go backend binary
+task clean        # Remove build artifacts
+```
 
 ## Component Architecture
 
-Components follow **Atomic Design** in `server/src/lib/components/`:
+Frontend components follow **Atomic Design** in `frontend/src/lib/components/`:
 
 - `atoms/` - Basic building blocks (buttons, inputs)
 - `molecules/` - Combinations of atoms
@@ -100,41 +116,30 @@ Components follow **Atomic Design** in `server/src/lib/components/`:
 </script>
 ```
 
-- Use `$props()` for props, `$state()` for reactive state, `$bindable()` for two-way binding
-- Use `cn()` from `$lib/utils.js` for class merging (never raw template literals)
-- Use `tailwind-variants` (`tv()`) for component variants (see `button.svelte` for example)
-- Each component folder has an `index.ts` barrel file exporting named components
+- Use `$props()` for props, `$state()` for reactive state, `$bindable()` for two-way binding.
+- Use `cn()` from `$lib/utils.js` for class merging.
+- Use `tailwind-variants` (`tv()`) for component variants.
+
+### Path Aliases (Frontend)
+
+```typescript
+$lib = frontend/src/lib
+$lib/components/ui = UI components
+$lib/utils = Utility functions
+```
 
 ### Icons
 
 - Use `@lucide/svelte` for icons
   e.g. `import { UserIcon } from "@lucide/svelte";`
 
-### Path Aliases
-
-```typescript
-$lib = server/src/lib
-$lib/components/ui = UI components
-$lib/utils = Utility functions (cn, type helpers)
-```
-
-## Development Commands
-
-```bash
-cd server
-npm run dev          # Start dev server
-npm run build        # Production build
-npm run check        # TypeScript + Svelte checks
-npm run lint         # Prettier + ESLint
-npm run format       # Auto-format code
-```
-
 ## Key Conventions
 
-1. **Props**: Always use TypeScript types, prefer `WithElementRef<T>` for ref forwarding
-2. **Styling**: Use Tailwind utilities; semantic color tokens like `bg-primary`, `text-muted-foreground`
-3. **Dark Mode**: Uses `.dark` class on root; CSS variables in `layout.css` handle theming
-4. **New UI Components**: Run `npx shadcn-svelte@latest add <component>` from `server/`
+1.  **Security First**: Never leak backend logic into the frontend.
+2.  **Explicit Control**: Prefer linear, readable code over magic.
+3.  **Locality**: Keep logic close to the data it uses.
+4.  **Minimalism**: Maintain a small footprint, especially for the planned client.
+5.  **New UI Components**: Run `npx shadcn-svelte@latest add <component>` from `frontend/`.
 
 ---
 
@@ -148,12 +153,12 @@ Use FIRST to discover available documentation sections.
 
 ### 2. get-documentation
 
-Fetch full documentation for relevant sections after analyzing list-sections results.
+Fetch full documentation for relevant sections.
 
 ### 3. svelte-autofixer
 
-MUST use when writing Svelte code. Keep calling until no issues returned.
+MUST use when writing Svelte code.
 
 ### 4. playground-link
 
-Only after user confirms they want a link (never for code written to project files).
+Only after user confirms they want a link.

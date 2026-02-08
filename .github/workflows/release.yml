@@ -1,0 +1,172 @@
+name: Release
+
+# Trigger the workflow when a release is created
+on:
+  release:
+    types: [published]
+
+# This ensures only one workflow runs at a time for the same release if triggered multiple times
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to upload assets to the release
+      packages: write # Needed if we push to GHCR (optional, currently using Docker Hub)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- 1. Efficient Frontend Build (Run Once) ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      # Copy frontend build to backend directory (embedded fs)
+      # This mimics the 'task default' behavior but is platform-agnostic for CI
+      - name: Prepare Backend Embed
+        run: |
+          mkdir -p backend/internal/ui/dist
+          cp -r frontend/build/* backend/internal/ui/dist/
+
+      # --- 2. Efficient Backend Build (Cross-Compile on Linux Runner) ---
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24" # Using latest stable Go version
+          cache-dependency-path: backend/go.sum
+
+      - name: Build and Package Binaries
+        id: build
+        run: |
+          mkdir -p artifacts bin
+
+          # Define platforms to build for
+          # Format: GOOS/GOARCH
+          platforms=(
+            "linux/amd64"
+            "linux/arm64"
+            "windows/amd64"
+            "darwin/amd64"
+            "darwin/arm64"
+          )
+
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          # Fallback if tag is empty (shouldn't happen on release event)
+          if [ -z "$TAG_NAME" ]; then
+            TAG_NAME="latest"
+          fi
+
+          for platform in "${platforms[@]}"; do
+            GOOS=${platform%/*}
+            GOARCH=${platform#*/}
+            BINARY_NAME="wolite"
+            # Format: wolite-<tag>-<os>-<arch>
+            OUTPUT_NAME="wolite-${TAG_NAME}-${GOOS}-${GOARCH}"
+            ARCHIVE_EXT=".tar.gz"
+            
+            # Windows specific handling
+            if [ "$GOOS" = "windows" ]; then
+              BINARY_NAME="${BINARY_NAME}.exe"
+              ARCHIVE_EXT=".zip"
+            fi
+            
+            echo "Building for $GOOS/$GOARCH..."
+            
+            # Build the binary
+            # -s -w: Strip debug information for smaller binary
+            # CGO_ENABLED=0: Static binary (no C dependency)
+            export CGO_ENABLED=0
+            export GOOS=$GOOS
+            export GOARCH=$GOARCH
+            
+            go build -ldflags="-s -w" -trimpath -o "bin/${BINARY_NAME}" backend/main.go
+            
+            # Package the binary
+            if [ "$GOOS" = "windows" ]; then
+              zip -j "artifacts/${OUTPUT_NAME}${ARCHIVE_EXT}" "bin/${BINARY_NAME}"
+            else
+              tar -czf "artifacts/${OUTPUT_NAME}${ARCHIVE_EXT}" -C bin "${BINARY_NAME}"
+            fi
+            
+            # Clean up bin directory for next iteration
+            rm -rf bin/*
+          done
+
+          echo "Build complete. Artifacts:"
+          ls -l artifacts/
+
+      # --- 3. Upload Binaries to GitHub Release ---
+      - name: Upload Binaries to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- 4. Docker Build & Publish ---
+      # We use the existing Dockerfile, which is multi-stage.
+      # To be ultra-efficient, we could build a minimal scratch image from the linux/amd64 binary we just built,
+      # but using the Dockerfile ensures the image is exactly as defined in the repo source.
+      # Since we use cross-compilation above, the compute saved is significant regardless.
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          # Push both 'latest' and the release tag (e.g. v1.0.0)
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/wolite:latest
+            ${{ secrets.DOCKER_USERNAME }}/wolite:${{ github.event.release.tag_name }}
+          # Also build for arm64 if possible (QEMU handles this)
+          platforms: linux/amd64,linux/arm64
+
+      # --- 5. Save and Upload Docker Image (Tarball) ---
+      # This step creates a standalone tarball of the Docker image for manual loading.
+      # We pull the image we just pushed to avoid rebuilding.
+
+      - name: Save Docker Image
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          if [ -z "$TAG_NAME" ]; then TAG_NAME="latest"; fi
+
+          # Pull the image we just pushed and save it
+          docker pull ${{ secrets.DOCKER_USERNAME }}/wolite:${TAG_NAME}
+          docker save ${{ secrets.DOCKER_USERNAME }}/wolite:${TAG_NAME} | gzip > "wolite-docker-${TAG_NAME}.tar.gz"
+
+      - name: Upload Docker Image to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: wolite-docker-*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

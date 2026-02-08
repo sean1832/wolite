@@ -1,0 +1,23 @@
+meta {
+  name: UpdateUser
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{BASE}}/users
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username":"admin1",
+    "password":"567"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
