@@ -36,12 +36,15 @@ func LoadConfig() *Config {
 		slog.Warn("JWT_SECRET not provided, generated a random one")
 	}
 	jwtExpiryString := os.Getenv("JWT_EXPIRY_SECONDS")
+	var jwtExpiry int
 	if jwtExpiryString == "" {
-		log.Fatalf("JWT_EXPIRY_SECONDS not provided")
-	}
-	jwtExpiry, err := strconv.Atoi(jwtExpiryString)
-	if err != nil {
-		log.Fatalf("failed to parse JWT_EXPIRY_SECONDS: %v", err)
+		slog.Warn("JWT_EXPIRY_SECONDS not provided, using default value")
+		jwtExpiry = 604800 // 7 days
+	} else {
+		jwtExpiry, err = strconv.Atoi(jwtExpiryString)
+		if err != nil {
+			log.Fatalf("failed to parse JWT_EXPIRY_SECONDS: %v", err)
+		}
 	}
 	if jwtExpiry < 0 {
 		log.Fatalf("JWT_EXPIRY_SECONDS must be a positive integer")
