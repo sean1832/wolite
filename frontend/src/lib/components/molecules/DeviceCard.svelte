@@ -89,10 +89,10 @@
         <Button 
             variant="ghost" 
             size="sm"
-            class="h-8 px-3 text-xs font-medium text-foreground/80 hover:text-primary hover:bg-primary/5 transition-all duration-300 gap-1.5 group/wake"
+            class="h-8 px-3 text-xs font-medium text-foreground/80 hover:text-primary hover:bg-primary/5 transition-all duration-300 gap-1.5 group/wake w-full md:w-auto border"
             onclick={handleWake}
         >
-            <span>Wake</span>
+            <span class="hidden md:block">Wake</span>
             <Power class="w-3 h-3 group-hover/wake:text-primary transition-colors" />
         </Button>
     {/if}

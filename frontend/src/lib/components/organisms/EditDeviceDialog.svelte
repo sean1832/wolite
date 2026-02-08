@@ -58,9 +58,9 @@
 
 		<form onsubmit={handleSubmit} class="grid gap-6 py-4">
 			<div class="grid gap-2">
-				<Label for="name">Name</Label>
+				<Label for="device_name">Device Name</Label>
 				<Input
-					id="name"
+					id="device_name"
 					bind:value={name}
 					placeholder="e.g. Workstation"
 					required
