@@ -1,7 +1,32 @@
-node_modules
-package-lock.json
+# Version Control
+.git
+.gitignore
+
+# Go
+backend/bin
+backend/vendor
+backend/internal/ui/dist
+
+# Node
+frontend/node_modules
+frontend/build
+frontend/.svelte-kit
+
+# Environment
 .env
-logs
-docs/images
-**/*.bak
-data
+.env.*
+
+# Docker
+Dockerfile
+.dockerignore
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

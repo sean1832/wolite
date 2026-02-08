@@ -1,0 +1,73 @@
+version: "3"
+
+vars:
+  BINARY_NAME: wolite
+  FRONTEND_DIR: frontend
+  BACKEND_DIR: backend
+  UI_DIST_DIR: "{{.BACKEND_DIR}}/internal/ui/dist"
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  # Build Svelte frontend
+  frontend:
+    dir: "{{.FRONTEND_DIR}}"
+    sources:
+      - "**/*.svelte"
+      - "**/*.js"
+      - "**/*.ts"
+      - "package.json"
+    generates:
+      - "build/**/*"
+    cmds:
+      - npm install
+      - npm run build
+
+      # --- Linux / macOS ---
+      - cmd: mkdir -p ../{{.UI_DIST_DIR}}
+        platforms: [linux, darwin]
+      - cmd: cp -r build/* ../{{.UI_DIST_DIR}}/
+        platforms: [linux, darwin]
+
+      # --- Windows (PowerShell) ---
+      # Uses New-Item to safely create directories (ignoring errors if they exist)
+      # Uses Copy-Item to recursively copy files, handling paths correctly
+      - cmd: powershell -Command "New-Item -ItemType Directory -Force -Path '../{{.UI_DIST_DIR}}'"
+        platforms: [windows]
+      - cmd: powershell -Command "Copy-Item -Recurse -Force 'build\*' -Destination '../{{.UI_DIST_DIR}}'"
+        platforms: [windows]
+
+  # Build Go backend (Debug)
+  backend-debug:
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - cmd: go build -o bin/{{.BINARY_NAME}} main.go
+        platforms: [linux, darwin]
+      - cmd: go build -o bin/{{.BINARY_NAME}}.exe main.go
+        platforms: [windows]
+
+  # Build Go backend (Production - Optimized)
+  backend:
+    dir: "{{.BACKEND_DIR}}"
+    env:
+      CGO_ENABLED: "0"
+    cmds:
+      - cmd: go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}} main.go
+        platforms: [linux, darwin]
+      - cmd: go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}}.exe main.go
+        platforms: [windows]
+
+  # Orchestration
+  build:
+    cmds:
+      - task: frontend
+      - task: backend
+
+  clean:
+    cmds:
+      - rm -rf {{.UI_DIST_DIR}}
+      - rm -rf {{.BACKEND_DIR}}/bin/{{.BINARY_NAME}}
+      - rm -rf {{.FRONTEND_DIR}}/build
+    ignore_error: true

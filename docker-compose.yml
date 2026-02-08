@@ -1,17 +1,27 @@
-version: "3"
 services:
   wolite:
-    image: sean1832/wolite:latest
+    build: .
+    image: wolite:latest
     container_name: wolite
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    environment:
-      - USERNAME=your-username # required
-      - PASSWORD=your-password # required
-
-      # # (Optional) Uncomment to enable
-      # - ENABLE_OTP=true
-      # - ALLOWED_ORIGINS="ALL" # `ALL` to allow all ip. Add specific ip addresses to restrict access
-      # - PORT=3000
+      - "8080:8080"
     volumes:
-      - ./data:/usr/wolite/data
+      # Mount a local directory to persist the database
+      # Ensure ./data is writable by user 65532 (or let Docker create it)
+      - ./data:/data
+    environment:
+      # Optional: Override default port (container internal port is fixed at 8080)
+      - PORT=8080
+      # Optional: Override database path within the container
+      - DATABASE_PATH=/data/wolite.json
+      # Optional: Set JWT secret (if not set, a random one is generated on startup)
+      # - JWT_SECRET=your-secure-random-string
+      # Optional: Set JWT expiry in seconds (default: 7 days)
+      # - JWT_EXPIRY_SECONDS=604800
+      # Optional: Enable development mode (allows CORS)
+      # - DEV_MODE=false
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp
