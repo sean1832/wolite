@@ -7,8 +7,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import type { ToasterProps } from 'svelte-sonner';
 
 	let { children } = $props();
+
+	let toastPosition = $state<ToasterProps['position']>('bottom-left');
 
 	// Protected routes that require authentication
 	// We allow public access only to /login and /setup
@@ -39,12 +42,22 @@
 		}
 	});
 
-	onMount(async () => {
-		await authStore.init(fetch);
+	onMount(() => {
+		authStore.init(fetch);
+
+		const mediaQuery = window.matchMedia('(max-width: 640px)');
+		const updatePosition = () => {
+			toastPosition = mediaQuery.matches ? 'top-center' : 'bottom-right';
+		};
+
+		updatePosition();
+		mediaQuery.addEventListener('change', updatePosition);
+
+		return () => mediaQuery.removeEventListener('change', updatePosition);
 	});
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <ModeWatcher />
-<Toaster />
+<Toaster position={toastPosition} />
 {@render children()}

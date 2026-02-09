@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type Device } from '$lib/types';
+	import { toast } from 'svelte-sonner';
 	import { deviceStore } from '$lib/stores/devices.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
@@ -32,8 +33,17 @@
 	async function handleWake(e: Event) {
 		e.stopPropagation();
 		if (isOnline) return;
+
+		const promise = deviceStore.wakeDevice(fetch, device.mac_address);
+
+		toast.promise(promise, {
+			loading: 'Sending wake command...',
+			success: `Wake command sent to ${device.name}`,
+			error: 'Failed to send wake command'
+		});
+
 		try {
-			await deviceStore.wakeDevice(fetch, device.mac_address);
+			await promise;
 		} catch {
 			// Error is already logged in store
 		}
