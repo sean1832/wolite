@@ -39,12 +39,25 @@ func SendMagicPacket(macAddress, broadcastAddr string) error {
 
 	slog.Debug("sending magic packet", "mac", macAddress, "broadcast", broadcastAddr, "packet_size", len(packet))
 
-	// Use net.Dial with udp4 to handle broadcast
-	conn, err := net.Dial("udp4", broadcastAddr)
+	// Resolve the UDP address
+	addr, err := net.ResolveUDPAddr("udp4", broadcastAddr)
+	if err != nil {
+		return fmt.Errorf("invalid broadcast address: %w", err)
+	}
+
+	// Use DialUDP instead of Dial to access UDP-specific methods
+	conn, err := net.DialUDP("udp4", nil, addr)
 	if err != nil {
 		return fmt.Errorf("failed to dial UDP: %w", err)
 	}
 	defer conn.Close()
+
+	// Enable broadcast
+	// Linux/Unix requires this socket option to be set to send to broadcast addresses (e.g. 255.255.255.255).
+	// Without this, the call to Write() may fail with "permission denied" or "invalid argument".
+	if err := setBroadcast(conn); err != nil {
+		return fmt.Errorf("failed to set broadcast: %w", err)
+	}
 
 	_, err = conn.Write(packet[:])
 	if err != nil {
