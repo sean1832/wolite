@@ -16,7 +16,7 @@ func (a *API) handleCertFingerprint(w http.ResponseWriter, r *http.Request) {
 		slog.Error("failed to get config dir", "error", err, "ip", r.RemoteAddr)
 		return
 	}
-	certPath := filepath.Join(configDir, "cert.pem")
+	certPath := filepath.Join(configDir, "wolite", "cert.pem")
 	fingerprint, err := tls.GetCertFingerprint(certPath)
 	if err != nil {
 		writeRespErr(w, "failed to retrieve certificate fingerprint", http.StatusInternalServerError)
