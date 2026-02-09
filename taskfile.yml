@@ -59,6 +59,23 @@ tasks:
       - cmd: go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}}.exe main.go
         platforms: [windows]
 
+  # Companion App (GUI)
+  companion-gui:
+    dir: companion
+    cmds:
+      - cmd: go build -tags gui -ldflags="-H=windowsgui -s -w" -o ../companion/bin/companion-gui.exe .
+
+  # Companion App (CLI)
+  companion-cli:
+    dir: companion
+    cmds:
+      - cmd: go build -tags cli -ldflags="-s -w" -o ../companion/bin/companion-cli.exe .
+
+  companion:
+    cmds:
+      - task: companion-gui
+      - task: companion-cli
+
   # Orchestration
   build:
     cmds:

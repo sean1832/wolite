@@ -1,3 +1,5 @@
+//go:build gui
+
 package main
 
 import (
@@ -17,6 +19,9 @@ func onReady() {
 
 	// Sets the icon of a menu item. Only available on Mac and Windows.
 	mQuit.SetIcon(icon.Data)
+
+	// Start the shared application logic
+	go runApp()
 
 	go func() {
 		<-mQuit.ClickedCh
