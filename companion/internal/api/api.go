@@ -3,17 +3,18 @@ package api
 import (
 	"context"
 	"net/http"
+	"wolcompanion/internal/auth"
 )
 
 type API struct {
-	Context   context.Context
-	tokenHash [32]byte
+	Context    context.Context
+	tokenStore *auth.TokenStore
 }
 
-func NewAPI(ctx context.Context, tokenHash [32]byte) *API {
+func NewAPI(ctx context.Context, tokenStore *auth.TokenStore) *API {
 	return &API{
-		Context:   ctx,
-		tokenHash: tokenHash,
+		Context:    ctx,
+		tokenStore: tokenStore,
 	}
 }
 

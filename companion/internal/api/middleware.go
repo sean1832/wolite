@@ -98,9 +98,12 @@ func (a *API) bearerTokenAuth(next http.Handler) http.Handler {
 		// Hash the input token to compare against the stored hash
 		inputHash := sha256.Sum256([]byte(inputToken))
 
+		// Get current token hash from store
+		storedHash := a.tokenStore.GetHash()
+
 		// ConstantTimeCompare requires byte slices.
 		// It returns 1 if equal, 0 otherwise.
-		if subtle.ConstantTimeCompare(inputHash[:], a.tokenHash[:]) != 1 {
+		if subtle.ConstantTimeCompare(inputHash[:], storedHash[:]) != 1 {
 			writeRespErr(w, "Unauthorized", http.StatusUnauthorized)
 			slog.Error("Unauthorized", "error", "invalid token", "ip", r.RemoteAddr)
 			return
