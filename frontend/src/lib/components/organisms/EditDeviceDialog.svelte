@@ -57,6 +57,15 @@
 		</Dialog.Header>
 
 		<form onsubmit={handleSubmit} class="grid gap-6 py-4">
+			<div class="rounded-md border border-border/50 bg-muted/40 p-3">
+				<div class="flex flex-col gap-1.5">
+					<span class="text-[10px] font-medium tracking-wider text-muted-foreground/70 uppercase"
+						>MAC Address</span
+					>
+					<code class="font-mono text-sm text-foreground">{device.mac_address}</code>
+				</div>
+			</div>
+
 			<div class="grid gap-2">
 				<Label for="device_name">Device Name</Label>
 				<Input
