@@ -4,10 +4,10 @@
 
 # Wolite
 
-![GitHub License](https://img.shields.io/github/license/sean1832/wolite)
+[![GitHub License](https://img.shields.io/github/license/sean1832/wolite)](https://github.com/sean1832/wolite/blob/main/LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://golang.org/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-5.0-FF3E00?logo=svelte)](https://kit.svelte.dev/)
-![GitHub Release](https://img.shields.io/github/v/release/sean1832/wolite)
+[![GitHub Release](https://img.shields.io/github/v/release/sean1832/wolite)](https://github.com/sean1832/wolite/releases/latest)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://hub.docker.com/r/sean1832/wolite)
 
 Wolite is a lightweight, secure Wake-on-LAN (WoL) service that enables remote machine power control over the network.
