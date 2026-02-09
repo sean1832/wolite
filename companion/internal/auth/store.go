@@ -132,3 +132,8 @@ func (ts *TokenStore) Cleanup() {
 		}
 	}
 }
+
+// GetTempTokenPath returns the path to the temporary token file.
+func (ts *TokenStore) GetTempTokenPath() string {
+	return ts.tempTokenPath
+}
