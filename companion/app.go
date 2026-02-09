@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 	"wolcompanion/internal/api"
 	"wolcompanion/internal/auth"
 	"wolcompanion/internal/tls"
@@ -32,6 +34,18 @@ func runApp() {
 	keyPath := filepath.Join(configDir, "key.pem")
 	tokenPath := filepath.Join(configDir, "token.sha256")
 
+	// temp token file
+	tempTokenFile := filepath.Join(configDir, "token.txt")
+	if _, err := os.Stat(tempTokenFile); err == nil {
+		// token file exists, meaning it is not cleanup from previous session, delete it
+		if err := os.Remove(tempTokenFile); err != nil {
+			log.Fatalf("failed to remove token file: %v", err)
+		}
+		slog.Info("token file deleted", "reason", "not cleaned up from previous session", "path", tempTokenFile)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		log.Fatalf("failed to check token file: %v", err)
+	}
+
 	// generate cert if not exist
 	if !tls.CertExists(certPath, keyPath) {
 		slog.Info("generating self-signed certificate")
@@ -49,7 +63,20 @@ func runApp() {
 		if err != nil {
 			log.Fatalf("failed to generate token: %v", err)
 		}
-		slog.Info("authentication token generated", "token", string(token))
+		if err := os.WriteFile(tempTokenFile, []byte(token), 0600); err != nil {
+			log.Fatalf("failed to save token: %v", err)
+		}
+		slog.Info("token saved to file, copy it. (auto-delete after 120 seconds)", "path", tempTokenFile)
+
+		// goroutine: auto delete token file after 120 seconds
+		go func() {
+			time.Sleep(120 * time.Second)
+			if err := os.Remove(tempTokenFile); err != nil {
+				slog.Error("failed to remove token file", "error", err)
+				return
+			}
+			slog.Info("token file deleted", "reason", "auto-deleted after 120 seconds", "path", tempTokenFile)
+		}()
 
 		// hash
 		tokenHash = sha256.Sum256([]byte(token))
