@@ -11,8 +11,8 @@ func (a *API) handleShutdown(w http.ResponseWriter, r *http.Request) {
 	// catch unsupported platforms or missing binaries IMMEDIATELY.
 	execute, err := commands.PrepareShutdown(3)
 	if err != nil {
-		writeRespErr(w, err.Error(), http.StatusInternalServerError)
-		slog.Error("SHUTDOWN validation failed", "error", err)
+		writeRespErr(w, "command validation failed", http.StatusInternalServerError)
+		slog.Error("SHUTDOWN validation failed", "error", err, "ip", r.RemoteAddr)
 		return
 	}
 
@@ -24,6 +24,7 @@ func (a *API) handleShutdown(w http.ResponseWriter, r *http.Request) {
 			// at this point, the HTTP connection is closed. Only log the execution failure.
 			slog.Error("failed to execute delayed SHUTDOWN", "error", err)
 		}
+		slog.Info("command executed", "command", "SHUTDOWN", "ip", r.RemoteAddr)
 	}()
 }
 
@@ -32,8 +33,8 @@ func (a *API) handleReboot(w http.ResponseWriter, r *http.Request) {
 	// catch unsupported platforms or missing binaries IMMEDIATELY.
 	execute, err := commands.PrepareReboot(3)
 	if err != nil {
-		writeRespErr(w, err.Error(), http.StatusInternalServerError)
-		slog.Error("REBOOT validation failed", "error", err)
+		writeRespErr(w, "command validation failed", http.StatusInternalServerError)
+		slog.Error("REBOOT validation failed", "error", err, "ip", r.RemoteAddr)
 		return
 	}
 
@@ -43,8 +44,9 @@ func (a *API) handleReboot(w http.ResponseWriter, r *http.Request) {
 		// wait 3 seconds, then execute
 		if err := execute(); err != nil {
 			// at this point, the HTTP connection is closed. Only log the execution failure.
-			slog.Error("failed to execute delayed REBOOT", "error", err)
+			slog.Error("failed to execute delayed REBOOT", "error", err, "ip", r.RemoteAddr)
 		}
+		slog.Info("command executed", "command", "REBOOT", "ip", r.RemoteAddr)
 	}()
 }
 
@@ -54,8 +56,8 @@ func (a *API) handleSleep(w http.ResponseWriter, r *http.Request) {
 	// catch unsupported platforms or missing binaries IMMEDIATELY.
 	execute, err := commands.PrepareSleep(3)
 	if err != nil {
-		writeRespErr(w, err.Error(), http.StatusInternalServerError)
-		slog.Error("SLEEP validation failed", "error", err)
+		writeRespErr(w, "command validation failed", http.StatusInternalServerError)
+		slog.Error("SLEEP validation failed", "error", err, "ip", r.RemoteAddr)
 		return
 	}
 
@@ -65,8 +67,9 @@ func (a *API) handleSleep(w http.ResponseWriter, r *http.Request) {
 		// wait 3 seconds, then execute
 		if err := execute(); err != nil {
 			// at this point, the HTTP connection is closed. Only log the execution failure.
-			slog.Error("failed to execute delayed SLEEP", "error", err)
+			slog.Error("failed to execute delayed SLEEP", "error", err, "ip", r.RemoteAddr)
 		}
+		slog.Info("command executed", "command", "SLEEP", "ip", r.RemoteAddr)
 	}()
 }
 
@@ -75,8 +78,8 @@ func (a *API) handleHibernate(w http.ResponseWriter, r *http.Request) {
 	// catch unsupported platforms or missing binaries IMMEDIATELY.
 	execute, err := commands.PrepareHibernate(3)
 	if err != nil {
-		writeRespErr(w, err.Error(), http.StatusInternalServerError)
-		slog.Error("HIBERNATE validation failed", "error", err)
+		writeRespErr(w, "command validation failed", http.StatusInternalServerError)
+		slog.Error("HIBERNATE validation failed", "error", err, "ip", r.RemoteAddr)
 		return
 	}
 
@@ -86,7 +89,8 @@ func (a *API) handleHibernate(w http.ResponseWriter, r *http.Request) {
 		// wait 3 seconds, then execute
 		if err := execute(); err != nil {
 			// at this point, the HTTP connection is closed. Only log the execution failure.
-			slog.Error("failed to execute delayed HIBERNATE", "error", err)
+			slog.Error("failed to execute delayed HIBERNATE", "error", err, "ip", r.RemoteAddr)
 		}
+		slog.Info("command executed", "command", "HIBERNATE", "ip", r.RemoteAddr)
 	}()
 }

@@ -57,7 +57,7 @@ func rateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !limiter.Allow() {
 			writeRespErr(w, "Too Many Requests", http.StatusTooManyRequests)
-			slog.Warn("rate limit exceeded", "path", r.URL.Path)
+			slog.Warn("rate limit exceeded", "path", r.URL.Path, "ip", r.RemoteAddr)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -70,7 +70,7 @@ func (a *API) bearerTokenAuth(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			writeRespErr(w, "Unauthorized", http.StatusUnauthorized)
-			slog.Error("Unauthorized", "error", "missing Authorization header")
+			slog.Error("Unauthorized", "error", "missing Authorization header", "ip", r.RemoteAddr)
 			return
 		}
 
@@ -78,7 +78,7 @@ func (a *API) bearerTokenAuth(next http.Handler) http.Handler {
 		const prefix = "Bearer "
 		if !strings.HasPrefix(authHeader, prefix) {
 			writeRespErr(w, "Unauthorized", http.StatusUnauthorized)
-			slog.Error("Unauthorized", "error", "invalid Authorization header format")
+			slog.Error("Unauthorized", "error", "invalid Authorization header format", "ip", r.RemoteAddr)
 			return
 		}
 
@@ -91,7 +91,7 @@ func (a *API) bearerTokenAuth(next http.Handler) http.Handler {
 		// It returns 1 if equal, 0 otherwise.
 		if subtle.ConstantTimeCompare(inputHash[:], a.tokenHash[:]) != 1 {
 			writeRespErr(w, "Unauthorized", http.StatusUnauthorized)
-			slog.Error("Unauthorized", "error", "invalid token")
+			slog.Error("Unauthorized", "error", "invalid token", "ip", r.RemoteAddr)
 			return
 		}
 
