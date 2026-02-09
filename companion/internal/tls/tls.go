@@ -23,20 +23,27 @@ func GenerateSelfSignedCert(certPath, keyPath string) error {
 	}
 
 	// Create certificate template
+
+	// Generate a 128-bit serial number.
+	// Use bit shifting (1 << 128) to define the upper bound [0, 2^128).
+	max := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		return err
+	}
 	template := x509.Certificate{
-		SerialNumber: big.NewInt(time.Now().Unix()),
+		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			Organization: []string{"sean1832/wolite"},
-			CommonName:   "localhost",
 		},
-		NotBefore: time.Now(),
-		NotAfter:  time.Now().AddDate(2, 0, 0), // expire after 2 years
-		IsCA:      true,
-		KeyUsage:  x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().AddDate(2, 0, 0), // expire after 2 years
+		IsCA:                  true,
+		BasicConstraintsValid: true,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		ExtKeyUsage: []x509.ExtKeyUsage{
 			x509.ExtKeyUsageServerAuth,
 		},
-		BasicConstraintsValid: true,
 
 		// support both localhost and LAN IPs
 		IPAddresses: []net.IP{
