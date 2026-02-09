@@ -1,0 +1,108 @@
+package tls
+
+import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"math/big"
+	"net"
+	"os"
+	"time"
+)
+
+// GenerateSelfSignedCert creates a new self-signed certificate and private key
+func GenerateSelfSignedCert(certPath, keyPath string) error {
+	// generate RSA private key
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return err
+	}
+
+	// Create certificate template
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(time.Now().Unix()),
+		Subject: pkix.Name{
+			Organization: []string{"sean1832/wolite"},
+			CommonName:   "localhost",
+		},
+		NotBefore: time.Now(),
+		NotAfter:  time.Now().AddDate(10, 0, 0), // expire after 10 years
+		IsCA:      true,
+		KeyUsage:  x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageServerAuth,
+		},
+		BasicConstraintsValid: true,
+
+		// support both localhost and LAN IPs
+		IPAddresses: []net.IP{
+			net.ParseIP("127.0.0.1"),
+			net.ParseIP("::1"),
+		},
+		DNSNames: []string{"localhost"},
+	}
+
+	// add all local ip to certificates
+	addrs, err := net.InterfaceAddrs()
+	if err == nil {
+		for _, addr := range addrs {
+			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To4() != nil || ipnet.IP.To16() != nil {
+					template.IPAddresses = append(template.IPAddresses, ipnet.IP)
+				}
+			}
+		}
+	}
+
+	// create self-signed certificate
+	certBytes, err := x509.CreateCertificate(
+		rand.Reader,
+		&template,
+		&template, // self-signed: issuer = subject
+		&privateKey.PublicKey,
+		privateKey,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// write certificate to file
+	certFile, err := os.Create(certPath)
+	if err != nil {
+		return err
+	}
+	defer certFile.Close()
+
+	if err := pem.Encode(certFile, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certBytes,
+	}); err != nil {
+		return err
+	}
+
+	// write private key to file
+	keyFile, err := os.Create(keyPath)
+	if err != nil {
+		return err
+	}
+	defer keyFile.Close()
+
+	if err := pem.Encode(keyFile, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CertExists checks if certificate file already exist
+func CertExists(certPath, keyPath string) bool {
+	_, certErr := os.Stat(certPath)
+	_, keyErr := os.Stat(keyPath)
+	return certErr == nil && keyErr == nil
+}
