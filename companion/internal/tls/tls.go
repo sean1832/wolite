@@ -30,7 +30,7 @@ func GenerateSelfSignedCert(certPath, keyPath string) error {
 			CommonName:   "localhost",
 		},
 		NotBefore: time.Now(),
-		NotAfter:  time.Now().AddDate(10, 0, 0), // expire after 10 years
+		NotAfter:  time.Now().AddDate(2, 0, 0), // expire after 2 years
 		IsCA:      true,
 		KeyUsage:  x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		ExtKeyUsage: []x509.ExtKeyUsage{
