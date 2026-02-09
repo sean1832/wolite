@@ -20,14 +20,43 @@ func NewAPI(ctx context.Context, tokenHash [32]byte) *API {
 func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 	const p = "/api/v1"
 
+	standard := []middleware{
+		logger,
+		recoverer,
+		rateLimit,
+	}
+
+	authStack := []middleware{
+		logger,
+		recoverer,
+		rateLimit,
+		a.bearerTokenAuth,
+	}
+
+	handle := func(pattern string, handler func(http.ResponseWriter, *http.Request), middlewares []middleware) {
+		var h http.Handler = http.HandlerFunc(handler)
+		for i := len(middlewares) - 1; i >= 0; i-- {
+			h = middlewares[i](h)
+		}
+		mux.Handle(pattern, h)
+	}
+
+	handlePublic := func(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+		handle(pattern, handler, standard)
+	}
+
+	handleAuth := func(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+		handle(pattern, handler, authStack)
+	}
+
 	// public routes
-	mux.HandleFunc("GET "+p+"/health", a.handleHealth)
+	handlePublic("GET "+p+"/health", a.handleHealth)
 
 	// power commands (protected routes)
-	mux.HandleFunc("POST "+p+"/shutdown", a.requireAuth(a.handleShutdown))
-	mux.HandleFunc("POST "+p+"/reboot", a.requireAuth(a.handleReboot))
-	mux.HandleFunc("POST "+p+"/sleep", a.requireAuth(a.handleSleep))
-	mux.HandleFunc("POST "+p+"/hibernate", a.requireAuth(a.handleHibernate))
+	handleAuth("POST "+p+"/shutdown", a.handleShutdown)
+	handleAuth("POST "+p+"/reboot", a.handleReboot)
+	handleAuth("POST "+p+"/sleep", a.handleSleep)
+	handleAuth("POST "+p+"/hibernate", a.handleHibernate)
 }
 
 func (a *API) handleHealth(w http.ResponseWriter, r *http.Request) {
