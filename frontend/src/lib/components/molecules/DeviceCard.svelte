@@ -96,6 +96,9 @@
 			<code class="font-mono text-[10px] tracking-wide text-muted-foreground/40"
 				>{device.ip_address}</code
 			>
+			<code class="font-mono text-[10px] tracking-wide text-muted-foreground/30"
+				>{device.mac_address}</code
+			>
 		</div>
 	</div>
 
