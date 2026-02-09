@@ -29,19 +29,19 @@
 		e.preventDefault();
 		try {
 			// Default port to 9 if not specified
-            let finalBroadcastIp = broadcast_ip;
-            if (finalBroadcastIp && !finalBroadcastIp.includes(':')) {
-                finalBroadcastIp += ':9';
-            }
+			let finalBroadcastIp = broadcast_ip;
+			if (finalBroadcastIp && !finalBroadcastIp.includes(':')) {
+				finalBroadcastIp += ':9';
+			}
 
-			await deviceStore.updateDevice(fetch, device.mac_address, { 
-				name, 
+			await deviceStore.updateDevice(fetch, device.mac_address, {
+				name,
 				description,
-				ip_address, 
-				broadcast_ip: finalBroadcastIp 
+				ip_address,
+				broadcast_ip: finalBroadcastIp
 			});
 			open = false;
-		} catch (err) {
+		} catch {
 			// Error is already logged in store
 		}
 	}
@@ -69,7 +69,12 @@
 			</div>
 			<div class="grid gap-2">
 				<Label for="description">Description</Label>
-				<Textarea id="description" placeholder="e.g. Living Room PC" bind:value={description} class="col-span-3" />
+				<Textarea
+					id="description"
+					placeholder="e.g. Living Room PC"
+					bind:value={description}
+					class="col-span-3"
+				/>
 			</div>
 			<div class="grid gap-2">
 				<Label for="ip_address">IP Address</Label>

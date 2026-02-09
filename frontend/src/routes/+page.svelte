@@ -5,8 +5,7 @@
 	import AddDeviceDialog from '$lib/components/organisms/AddDeviceDialog.svelte';
 	import Header from '$lib/components/organisms/Header.svelte';
 	import FloatingActionButton from '$lib/components/atoms/FloatingActionButton.svelte';
-    import { Button } from "$lib/components/ui/button";
-    import { Plus } from "@lucide/svelte";
+	import { Button } from '$lib/components/ui/button';
 	import { onMount } from 'svelte';
 
 	let isAddDialogOpen = $state(false);
@@ -16,21 +15,28 @@
 	});
 </script>
 
-<div class="container mx-auto max-w-5xl px-6 min-h-[calc(100vh-4rem)] flex flex-col">
-	<div class="flex flex-col gap-6 flex-1">
+<div class="container mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col px-6">
+	<div class="flex flex-1 flex-col gap-6">
 		<Header title="Wolite" subtitle="Control Center">
-            <AddDeviceDialog bind:open={isAddDialogOpen}>
-                {#snippet trigger(props: any)}
-                    <Button variant="default" size="icon" class="hidden sm:flex h-9 w-auto shadow-sm hover:shadow-md transition-all px-2" {...props}>
-                        <span>+ Add Device</span>
-                    </Button>
-                {/snippet}
-            </AddDeviceDialog>
-        </Header>
+			<AddDeviceDialog bind:open={isAddDialogOpen}>
+				<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
+				{#snippet trigger(props: any)}
+					<Button
+						variant="default"
+						size="icon"
+						class="hidden h-9 w-auto px-2 shadow-sm transition-all hover:shadow-md sm:flex"
+						{...props}
+					>
+						<span>+ Add Device</span>
+					</Button>
+				{/snippet}
+			</AddDeviceDialog>
+		</Header>
 
-		<div class="grid grid-cols-1 gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
 			{#if deviceStore.loading && deviceStore.devices.length === 0}
-				{#each Array(3) as _}
+				<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+				{#each Array(3) as _, i (i)}
 					<DeviceCardSkeleton />
 				{/each}
 			{:else}
@@ -39,11 +45,15 @@
 				{/each}
 
 				{#if deviceStore.devices.length === 0}
-                    <!-- Empty state is less relevant now that we have the Add Card, but keeping it for mobile or if list empty -->
-                    <div class="col-span-full flex flex-col items-center justify-center space-y-6 py-12 text-center sm:hidden">
+					<!-- Empty state is less relevant now that we have the Add Card, but keeping it for mobile or if list empty -->
+					<div
+						class="col-span-full flex flex-col items-center justify-center space-y-6 py-12 text-center sm:hidden"
+					>
 						<div class="h-px w-24 bg-border/40"></div>
 						<div>
-							<p class="text-sm font-medium text-muted-foreground/60 uppercase tracking-widest">No devices</p>
+							<p class="text-sm font-medium tracking-widest text-muted-foreground/60 uppercase">
+								No devices
+							</p>
 						</div>
 						<div class="h-px w-24 bg-border/40"></div>
 					</div>
@@ -55,6 +65,7 @@
 
 <div class="sm:hidden">
 	<AddDeviceDialog bind:open={isAddDialogOpen}>
+		<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
 		{#snippet trigger(props: any)}
 			<FloatingActionButton {...props} />
 		{/snippet}

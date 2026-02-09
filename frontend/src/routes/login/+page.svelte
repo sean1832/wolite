@@ -11,7 +11,7 @@
 		InputOTPGroup,
 		InputOTPSeparator,
 		InputOTPSlot
-	} from "$lib/components/ui/input-otp";
+	} from '$lib/components/ui/input-otp';
 
 	let usernameInput = $state('');
 	let passwordInput = $state('');
@@ -30,9 +30,10 @@
 			await authStore.login(fetch, usernameInput, passwordInput, otpInput);
 			toast.success('Welcome back!');
 			goto('/');
-		} catch (err: any) {
+		} catch (err: unknown) {
 			// Handle specific errors
-			const msg = err.message || 'Login failed';
+			const e = err instanceof Error ? err : new Error(String(err));
+			const msg = e.message || 'Login failed';
 
 			if (msg.includes('OTP required')) {
 				showOTP = true;
@@ -100,13 +101,13 @@
 							<InputOTP maxlength={6} bind:value={otpInput}>
 								{#snippet children({ cells })}
 									<InputOTPGroup>
-										{#each cells.slice(0, 3) as cell}
+										{#each cells.slice(0, 3) as cell, i (i)}
 											<InputOTPSlot {cell} />
 										{/each}
 									</InputOTPGroup>
 									<InputOTPSeparator />
 									<InputOTPGroup>
-										{#each cells.slice(3, 6) as cell}
+										{#each cells.slice(3, 6) as cell, i (i)}
 											<InputOTPSlot {cell} />
 										{/each}
 									</InputOTPGroup>
