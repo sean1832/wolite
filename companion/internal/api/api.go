@@ -22,12 +22,14 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 
 	standard := []middleware{
 		logger,
+		securityHeaders,
 		recoverer,
 		rateLimit,
 	}
 
 	authStack := []middleware{
 		logger,
+		securityHeaders,
 		recoverer,
 		rateLimit,
 		a.bearerTokenAuth,

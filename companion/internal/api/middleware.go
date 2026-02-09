@@ -64,6 +64,17 @@ func rateLimit(next http.Handler) http.Handler {
 	})
 }
 
+// securityHeaders adds security-related headers to the response
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff") // blocks MIME type sniffing
+		w.Header().Set("X-Frame-Options", "DENY")           // blocks clickjacking
+		w.Header().Set("Cache-Control", "no-store")         // blocks caching
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // bearerTokenAuth creates a middleware that enforces authentication.
 func (a *API) bearerTokenAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
