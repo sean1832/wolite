@@ -22,34 +22,20 @@ Wolite is a lightweight, secure Wake-on-LAN (WoL) service that enables remote ma
 - **Single Binary Deployment**: The frontend is embedded directly into the Go binary for easy distribution.
 - **Simple Storage**: Uses a local JSON database for simplicity and easy updates.
 
-## Tech Stack
-
-- **Backend**: Go (Golang)
-- **Frontend**: Svelte 5 + SvelteKit (TypeScript)
-- **Styling**: Tailwind CSS v4 + tailwind-variants
-- **UI Components**: shadcn-svelte (bits-ui), Lucide icons
-- **Build System**: Taskfile
-
-## Prerequisites
-
-- [Go 1.22+](https://go.dev/)
-- [Node.js 20+](https://nodejs.org/)
-- [Task](https://taskfile.dev/) (Build tool)
-
 ## Docker Deployment
 
 You can deploy Wolite quickly using Docker.
 
 ### Option 1: Docker Compose
 
-1.  Create a `data` directory to persist the database and set permission to user 65532:
+Create a `data` directory to persist the database and set permission to user 65532:
 
 ```bash
 mkdir data
 chown 65532:65532 data
 ```
 
-2.  Create a `docker-compose.yml` file:
+Create a `docker-compose.yml` file:
 
 ```yaml
 services:
@@ -79,7 +65,7 @@ services:
       - /tmp
 ```
 
-3.  Run the container:
+Run the container:
 
 ```bash
 docker-compose up -d
@@ -104,12 +90,38 @@ docker run -d \
 
 The application will be available at `http://localhost:8080`.
 
-## Getting Started
+## Local Deployment
+### Download the latest release
+Download the [latest release](https://github.com/sean1832/wolite/releases/latest) according to your OS and architecture. Extract the executable to a desired place.
+
+### Configure a `.env` file
+1. Create a `.env` file next to the executable
+2. Edit the `.env` file
+```env
+DATABASE_PATH=./wolite.json
+PORT=8080
+JWT_SECRET=your-secure-random-string # <-- make sure you replace this
+JWT_EXPIRY_SECONDS=604800
+```
+
+### Execute the program
+```shell
+./wolite
+```
+You should be able to access the url `http://localhost:8080`
+
+## Build from source
+
+### Prerequisites
+
+- [Go 1.22+](https://go.dev/)
+- [Node.js 20+](https://nodejs.org/)
+- [Task](https://taskfile.dev/) (Build tool)
 
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/sean1832/wolite.git
 cd wolite
 ```
 
@@ -177,6 +189,14 @@ go run main.go
 - `frontend/`: SvelteKit application, UI components, and styles.
 - `Taskfile.yml`: Build scripts and task commands.
 
+## Tech Stack
+
+- **Backend**: Go (Golang)
+- **Frontend**: Svelte 5 + SvelteKit (TypeScript)
+- **Styling**: Tailwind CSS v4 + tailwind-variants
+- **UI Components**: shadcn-svelte (bits-ui), Lucide icons
+- **Build System**: Taskfile
+
 ## License
 
-[APACHE 2.0](LICENSE)
+[APACHE 2.0](https://github.com/sean1832/wolite/blob/main/LICENSE)
