@@ -28,7 +28,3 @@ func onReady() {
 		systray.Quit()
 	}()
 }
-
-func onExit() {
-	// TODO: clean up
-}
