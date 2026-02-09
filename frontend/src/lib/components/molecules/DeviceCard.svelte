@@ -23,7 +23,14 @@
 
 	let isOnline = $derived(device.status === 'online');
 
-	async function handleWake() {
+	function handleCardConfig() {
+		// Prevent text selection from triggering edit
+		if (window.getSelection()?.toString()) return;
+		isEditDialogOpen = true;
+	}
+
+	async function handleWake(e: Event) {
+		e.stopPropagation();
 		if (isOnline) return;
 		try {
 			await deviceStore.wakeDevice(fetch, device.mac_address);
@@ -41,8 +48,11 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="group relative rounded-sm border border-border/40 bg-card p-5 text-card-foreground shadow-sm transition-all duration-300 hover:bg-accent/30 hover:shadow-md dark:border-transparent dark:shadow-none"
+	class="group relative cursor-pointer rounded-sm border border-border/40 bg-card p-5 text-card-foreground shadow-sm transition-all duration-300 hover:bg-accent/30 hover:shadow-md dark:border-transparent dark:shadow-none"
+	onclick={handleCardConfig}
 >
 	<div class="mb-6 flex items-start justify-between">
 		<div class="flex items-center gap-2">
@@ -53,19 +63,21 @@
 		</div>
 
 		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
-				{#snippet child({ props })}
-					<Button
-						variant="ghost"
-						size="icon"
-						class="-mr-2 h-6 w-6 text-muted-foreground/30 transition-colors hover:text-foreground"
-						{...props}
-					>
-						<MoreVertical class="h-3.5 w-3.5" />
-						<span class="sr-only">Menu</span>
-					</Button>
-				{/snippet}
-			</DropdownMenu.Trigger>
+			<div onclick={(e) => e.stopPropagation()}>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button
+							variant="ghost"
+							size="icon"
+							class="-mr-2 h-6 w-6 text-muted-foreground/30 transition-colors hover:text-foreground"
+							{...props}
+						>
+							<MoreVertical class="h-3.5 w-3.5" />
+							<span class="sr-only">Menu</span>
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+			</div>
 			<DropdownMenu.Content align="end" class="w-32 border-border/40 font-light">
 				<DropdownMenu.Item onclick={() => (isEditDialogOpen = true)} class="text-xs"
 					>Edit</DropdownMenu.Item
