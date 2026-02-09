@@ -3,9 +3,11 @@ package tls
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"net"
 	"os"
@@ -105,4 +107,23 @@ func CertExists(certPath, keyPath string) bool {
 	_, certErr := os.Stat(certPath)
 	_, keyErr := os.Stat(keyPath)
 	return certErr == nil && keyErr == nil
+}
+
+// GetCertFingerprint retrieves the SHA-256 fingerprint of the certificate
+func GetCertFingerprint(certPath string) (string, error) {
+	certData, err := os.ReadFile(certPath)
+	if err != nil {
+		return "", err
+	}
+	block, _ := pem.Decode(certData)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return "", fmt.Errorf("failed to decode PEM block containing certificate")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "", err
+	}
+	// Calculate SHA-256 hash of the Raw ASN.1 DER data
+	hash := sha256.Sum256(cert.Raw)
+	return fmt.Sprintf("%X", hash), nil
 }

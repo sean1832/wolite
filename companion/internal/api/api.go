@@ -51,6 +51,7 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 
 	// public routes
 	handlePublic("GET "+p+"/health", a.handleHealth)
+	handlePublic("GET "+p+"/cert-fingerprint", a.handleCertFingerprint)
 
 	// power commands (protected routes)
 	handleAuth("POST "+p+"/shutdown", a.handleShutdown)
