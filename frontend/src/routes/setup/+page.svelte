@@ -13,7 +13,7 @@
 		InputOTPGroup,
 		InputOTPSeparator,
 		InputOTPSlot
-	} from "$lib/components/ui/input-otp";
+	} from '$lib/components/ui/input-otp';
 
 	let setupOTP = $state(false);
 	let username = $state('');
@@ -36,7 +36,7 @@
 
 		try {
 			// Setup request
-			const response = await http.post<any>(fetch, '/users', {
+			const response = await http.post<{ otp_url?: string }>(fetch, '/users', {
 				username,
 				password,
 				use_otp: setupOTP
@@ -47,7 +47,7 @@
 				// Generate QR code for the returned URL
 				const secretMatch = response.otp_url.match(/secret=([A-Za-z0-9]+)/);
 				const secret = secretMatch ? secretMatch[1] : 'Unknown Secret';
-				
+
 				otpData = {
 					secret: secret,
 					imageUrl: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(response.otp_url)}`
@@ -61,22 +61,23 @@
 			// Auto-login successful
 			await authStore.init(fetch);
 			toast.success('Admin account created successfully');
-			goto('/');
-		} catch (err: any) {
-			error = err.message || 'Setup failed';
+			await goto('/');
+		} catch (err: unknown) {
+			const errorInstance = err instanceof Error ? err : new Error(String(err));
+			error = errorInstance.message || 'Setup failed';
 		} finally {
 			loading = false;
 		}
 	}
 
 	let otpCode = $state('');
-	
+
 	async function verifyAndFinish() {
 		if (otpCode.length !== 6) {
 			error = 'Please enter a valid 6-digit code';
 			return;
 		}
-		
+
 		loading = true;
 		error = '';
 
@@ -84,9 +85,10 @@
 			await http.post(fetch, '/users/otp/verify', { code: otpCode });
 			await authStore.init(fetch);
 			toast.success('2FA Verified! Setup complete.');
-			goto('/');
-		} catch (err: any) {
-			error = err.message || 'Verification failed';
+			await goto('/');
+		} catch (err: unknown) {
+			const errorInstance = err instanceof Error ? err : new Error(String(err));
+			error = errorInstance.message || 'Verification failed';
 			loading = false;
 		}
 	}
@@ -121,18 +123,18 @@
 					<div class="rounded bg-muted/30 p-3 font-mono text-xs select-all">
 						{otpData.secret}
 					</div>
-					
+
 					<div class="flex justify-center">
 						<InputOTP maxlength={6} bind:value={otpCode}>
 							{#snippet children({ cells })}
 								<InputOTPGroup>
-									{#each cells.slice(0, 3) as cell}
+									{#each cells.slice(0, 3) as cell, i (i)}
 										<InputOTPSlot {cell} />
 									{/each}
 								</InputOTPGroup>
 								<InputOTPSeparator />
 								<InputOTPGroup>
-									{#each cells.slice(3, 6) as cell}
+									{#each cells.slice(3, 6) as cell, i (i)}
 										<InputOTPSlot {cell} />
 									{/each}
 								</InputOTPGroup>
@@ -144,7 +146,11 @@
 						<p class="text-center text-sm text-destructive">{error}</p>
 					{/if}
 
-					<Button class="w-full" onclick={verifyAndFinish} disabled={loading || otpCode.length !== 6}>
+					<Button
+						class="w-full"
+						onclick={verifyAndFinish}
+						disabled={loading || otpCode.length !== 6}
+					>
 						{#if loading}<Loader2 class="mr-2 h-4 w-4 animate-spin" />{/if}
 						Verify & Complete Setup
 					</Button>

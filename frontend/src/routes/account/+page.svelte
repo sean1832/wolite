@@ -4,9 +4,8 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
-	import { User, Lock, ShieldCheck, LogOut, ChevronRight, Loader2 } from '@lucide/svelte';
+	import { Lock, ShieldCheck, LogOut, ChevronRight, Loader2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { http } from '$lib/api';
 	import {
@@ -14,19 +13,18 @@
 		InputOTPGroup,
 		InputOTPSeparator,
 		InputOTPSlot
-	} from "$lib/components/ui/input-otp";
+	} from '$lib/components/ui/input-otp';
 
+	import { INITIAL_USER } from '$lib/constants';
 	import Header from '$lib/components/organisms/Header.svelte';
 
 	let isPasswordOpen = $state(false);
+	let user = $state(INITIAL_USER);
 	let isOtpOpen = $state(false);
 	let loading = $state(false);
 	let newOtpQr = $state<string | null>(null);
 	let newOtpSecret = $state<string | null>(null);
 	let otpCode = $state('');
-
-	// Derived user state from authStore
-	let user = $derived(authStore.user || { username: 'Guest', has_otp: false });
 
 	async function handleLogout() {
 		loading = true;
@@ -39,22 +37,23 @@
 			toast.error('Please enter a valid 6-digit code');
 			return;
 		}
-		
+
 		loading = true;
 		try {
 			await http.post(fetch, '/users/otp/verify', { code: otpCode });
 			toast.success('2FA Verified & Enabled!');
-			
+
 			// Refresh user state
 			await authStore.init(fetch);
-			
+
 			// Close dialog
 			isOtpOpen = false;
 			newOtpQr = null;
 			newOtpSecret = null;
 			otpCode = '';
-		} catch (err: any) {
-			toast.error(err.message || 'Verification failed');
+		} catch (err: unknown) {
+			const error = err instanceof Error ? err : new Error(String(err));
+			toast.error(error.message || 'Verification failed');
 		} finally {
 			loading = false;
 		}
@@ -66,7 +65,7 @@
 	) {
 		loading = true;
 		try {
-			const payload: any = {};
+			const payload: Record<string, unknown> = {};
 
 			if (type === 'username') {
 				payload.username = formData?.get('newUsername');
@@ -113,13 +112,17 @@
 			}
 			// For OTP toggles, we set use_otp
 
-			const response = await http.put<any>(fetch, '/users', payload);
+			const response = await http.put<{ otp_url?: string; use_otp: boolean }>(
+				fetch,
+				'/users',
+				payload
+			);
 
 			if (response && response.otp_url) {
 				// OTP was enabled or regenerated
 				const secretMatch = response.otp_url.match(/secret=([A-Za-z0-9]+)/);
 				const secret = secretMatch ? secretMatch[1] : 'Unknown Secret';
-				
+
 				newOtpSecret = secret;
 				newOtpQr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(response.otp_url)}`;
 			} else {
@@ -135,15 +138,16 @@
 
 			// Update local store state for OTP
 			if (type === 'toggleOtp') {
-				if (authStore.user) authStore.user.has_otp = payload.use_otp;
+				if (authStore.user) authStore.user.has_otp = payload.use_otp as boolean;
 				toast.success(`2FA ${payload.use_otp ? 'enabled' : 'disabled'}`);
 			} else if (type === 'regenerateOtp') {
 				toast.success('New 2FA secret generated. Scan the code.');
 			} else if (type === 'password') {
 				toast.success('Password updated');
 			}
-		} catch (err: any) {
-			toast.error(err.message || 'Update failed');
+		} catch (err: unknown) {
+			const error = err instanceof Error ? err : new Error(String(err));
+			toast.error(error.message || 'Update failed');
 		} finally {
 			loading = false;
 		}
@@ -151,7 +155,12 @@
 </script>
 
 <div class="container mx-auto max-w-lg px-6 py-20">
-	<Header title="Account" subtitle="Manage your credentials and security." backHref="/" showAccount={false}>
+	<Header
+		title="Account"
+		subtitle="Manage your credentials and security."
+		backHref="/"
+		showAccount={false}
+	>
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
@@ -169,7 +178,6 @@
 	</Header>
 
 	<div class="grid gap-4">
-
 		<!-- Password Card -->
 		<button class="group w-full text-left" onclick={() => (isPasswordOpen = true)}>
 			<Card.Root
@@ -214,10 +222,9 @@
 	</div>
 </div>
 
-
 <!-- Password Dialog -->
 <Dialog.Root bind:open={isPasswordOpen}>
-	<Dialog.Content class="sm:max-w-[425px]">
+	<Dialog.Content class="sm:max-w-106.25">
 		<Dialog.Header>
 			<Dialog.Title>Change Password</Dialog.Title>
 			<Dialog.Description>Ensure your account is using a strong password.</Dialog.Description>
@@ -264,7 +271,7 @@
 		if (!open) newOtpQr = null;
 	}}
 >
-	<Dialog.Content class="sm:max-w-[425px]">
+	<Dialog.Content class="sm:max-w-106.25">
 		<Dialog.Header>
 			<Dialog.Title>Two-Factor Authentication</Dialog.Title>
 			<Dialog.Description>Protect your account with an extra layer of security.</Dialog.Description>
@@ -279,7 +286,7 @@
 					<p class="font-medium">Scan this QR code</p>
 					<p class="mt-1 text-xs text-muted-foreground">Use your authenticator app</p>
 				</div>
-				
+
 				{#if newOtpSecret}
 					<div class="rounded bg-muted/30 p-2 font-mono text-xs select-all">
 						{newOtpSecret}
@@ -292,19 +299,19 @@
 						<InputOTP maxlength={6} bind:value={otpCode}>
 							{#snippet children({ cells })}
 								<InputOTPGroup>
-									{#each cells.slice(0, 3) as cell}
+									{#each cells.slice(0, 3) as cell, i (i)}
 										<InputOTPSlot {cell} />
 									{/each}
 								</InputOTPGroup>
 								<InputOTPSeparator />
 								<InputOTPGroup>
-									{#each cells.slice(3, 6) as cell}
+									{#each cells.slice(3, 6) as cell, i (i)}
 										<InputOTPSlot {cell} />
 									{/each}
 								</InputOTPGroup>
 							{/snippet}
 						</InputOTP>
-						
+
 						<Button onclick={verifyOtp} disabled={loading || otpCode.length !== 6} class="w-full">
 							{#if loading}<Loader2 class="mr-2 h-4 w-4 animate-spin" />{/if}
 							Verify & Enable
@@ -312,7 +319,11 @@
 					</div>
 				</div>
 
-				<Button variant="ghost" class="w-full text-muted-foreground" onclick={() => (isOtpOpen = false)}>Cancel</Button>
+				<Button
+					variant="ghost"
+					class="w-full text-muted-foreground"
+					onclick={() => (isOtpOpen = false)}>Cancel</Button
+				>
 			</div>
 		{:else}
 			{#if user.has_otp}

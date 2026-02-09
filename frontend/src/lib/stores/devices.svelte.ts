@@ -55,7 +55,11 @@ class DeviceStore {
 		}
 	}
 
-	async updateDevice(fetch: typeof window.fetch, macAddress: string, data: Partial<Omit<Device, 'mac_address' | 'status'>>) {
+	async updateDevice(
+		fetch: typeof window.fetch,
+		macAddress: string,
+		data: Partial<Omit<Device, 'mac_address' | 'status'>>
+	) {
 		this.loading = true;
 		this.error = null;
 		try {
