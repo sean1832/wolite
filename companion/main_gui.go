@@ -3,6 +3,7 @@
 package main
 
 import (
+	_ "embed"
 	"log/slog"
 	"os/exec"
 	"runtime"
@@ -11,26 +12,29 @@ import (
 	"wolcompanion/internal/auth"
 
 	"github.com/getlantern/systray"
-	"github.com/getlantern/systray/example/icon"
 )
 
 // Global tokenStore for cleanup on exit
 var globalTokenStore *auth.TokenStore
+
+//go:embed assets/logo.ico
+var iconData []byte
 
 func main() {
 	systray.Run(onReady, onExit)
 }
 
 func onReady() {
-	systray.SetIcon(icon.Data)
+	slog.Info("Setting icon", "size", len(iconData))
+	systray.SetIcon(iconData)
 	systray.SetTitle("Wolite Companion")
 	systray.SetTooltip("Wake on Lan client side monitoring tool")
 
-	mRegen := systray.AddMenuItem("Regenerate Token", "Generate a new authentication token")
+	mRegen := systray.AddMenuItem("Generate Token", "Generate a new authentication token")
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 
 	// Sets the icon of a menu item. Only available on Mac and Windows.
-	mQuit.SetIcon(icon.Data)
+	mQuit.SetIcon(iconData)
 
 	// Initialize App
 	tokenStore, certPath, keyPath, err := Initialize()
