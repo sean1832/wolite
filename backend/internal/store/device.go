@@ -16,6 +16,11 @@ type Device struct {
 	IPAddress   string `json:"ip_address"`            // mandatory IP address of the device
 	BroadcastIP string `json:"broadcast_ip"`          // mandatory broadcast IP (e.g., 192.168.1.255:9)
 
+	// Companion Integration
+	CompanionURL             string `json:"companion_url,omitempty"`              // e.g. https://192.168.1.50:8443
+	CompanionToken           string `json:"companion_token,omitempty"`            // Bearer token
+	CompanionAuthFingerprint string `json:"companion_auth_fingerprint,omitempty"` // SHA-256 fingerprint of the cert
+
 	Status Status `json:"status"` // current status of the device
 }
 
