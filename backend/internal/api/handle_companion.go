@@ -80,6 +80,7 @@ func (a *API) handleDeviceCompanionPair(w http.ResponseWriter, r *http.Request) 
 	device.CompanionURL = req.URL
 	device.CompanionToken = req.Token
 	device.CompanionAuthFingerprint = fingerprint
+	device.Status = store.StatusOnline
 
 	if err := a.store.UpdateDevice(device); err != nil {
 		writeRespErr(w, "Failed to save device", http.StatusInternalServerError)
@@ -113,6 +114,7 @@ func (a *API) handleDeviceCompanionUnpair(w http.ResponseWriter, r *http.Request
 	device.CompanionURL = ""
 	device.CompanionToken = ""
 	device.CompanionAuthFingerprint = ""
+	device.Status = store.StatusUnknown
 
 	if err := a.store.UpdateDevice(device); err != nil {
 		writeRespErr(w, "Failed to update device", http.StatusInternalServerError)
