@@ -86,9 +86,9 @@ class DeviceStore {
 			// Optionally update local state to show "waking" status
 			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
 			if (index !== -1) {
-				// Note: Backend doesn't return updated device, so we manually update
-				// In a production app, you might poll for status updates
-				this.devices[index] = { ...this.devices[index] };
+				// Note: Backend doesn't return updated device, so we manually update.
+				// We also trigger a reload after a short delay to check if device came online
+				setTimeout(() => this.init(fetch), 5000);
 			}
 		} catch (err) {
 			this.error = err instanceof Error ? err.message : 'Failed to wake device';

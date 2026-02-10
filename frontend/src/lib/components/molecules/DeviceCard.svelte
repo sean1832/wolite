@@ -3,9 +3,11 @@
 	import { toast } from 'svelte-sonner';
 	import { deviceStore } from '$lib/stores/devices.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
-	import { MoreVertical, Power } from '@lucide/svelte';
+	import { MoreVertical, Power, Moon, RefreshCw, Snowflake, Link } from '@lucide/svelte';
 	import { cn } from '$lib/utils';
+	import { fade } from 'svelte/transition';
 
 	import EditDeviceDialog from '$lib/components/organisms/EditDeviceDialog.svelte';
 	import PairCompanionDialog from '$lib/components/organisms/PairCompanionDialog.svelte';
@@ -81,112 +83,231 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="group relative cursor-pointer rounded-sm border border-border/40 bg-card p-5 text-card-foreground shadow-sm transition-all duration-300 hover:bg-accent/30 hover:shadow-md dark:border-transparent dark:shadow-none"
+	class="group relative flex min-h-45 cursor-pointer flex-col justify-between rounded-xl border border-border/40 bg-card p-5 text-card-foreground shadow-sm transition-all duration-300 hover:bg-accent/30 hover:shadow-md dark:border-transparent dark:shadow-none"
 	onclick={handleCardConfig}
 >
-	<div class="mb-6 flex items-start justify-between">
-		<div class="flex items-center gap-2">
-			<div class={cn('h-1.5 w-1.5 rounded-full transition-all duration-500', statusColor)}></div>
-			<span class="text-[10px] font-medium tracking-widest text-muted-foreground/60 uppercase"
-				>{device.status}</span
-			>
-		</div>
-
-		<DropdownMenu.Root>
-			<div onclick={(e) => e.stopPropagation()}>
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button
-							variant="ghost"
-							size="icon"
-							class="-mr-2 h-6 w-6 text-muted-foreground/30 transition-colors hover:text-foreground"
-							{...props}
-						>
-							<MoreVertical class="h-3.5 w-3.5" />
-							<span class="sr-only">Menu</span>
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-			</div>
-			<DropdownMenu.Content align="end" class="w-48 border-border/40 font-light">
-				<DropdownMenu.Item onclick={() => (isEditDialogOpen = true)} class="text-xs">
-					Edit
-				</DropdownMenu.Item>
-
-				{#if device.companion_url}
-					<DropdownMenu.Sub>
-						<DropdownMenu.SubTrigger class="text-xs">Power Actions</DropdownMenu.SubTrigger>
-						<DropdownMenu.SubContent class="w-32 border-border/40">
-							<DropdownMenu.Item onclick={() => handleCompanionAction('sleep')} class="text-xs">
-								Sleep
-							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={() => handleCompanionAction('restart')} class="text-xs">
-								Restart
-							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={() => handleCompanionAction('hibernate')} class="text-xs">
-								Hibernate
-							</DropdownMenu.Item>
-							<DropdownMenu.Separator class="bg-border/30" />
-							<DropdownMenu.Item
-								onclick={() => handleCompanionAction('shutdown')}
-								class="text-xs text-destructive focus:text-destructive"
-							>
-								Shutdown
-							</DropdownMenu.Item>
-						</DropdownMenu.SubContent>
-					</DropdownMenu.Sub>
-					<DropdownMenu.Item onclick={handleUnpair} class="text-xs text-muted-foreground">
-						Unpair Companion
-					</DropdownMenu.Item>
-				{:else}
-					<DropdownMenu.Item onclick={() => (isPairDialogOpen = true)} class="text-xs">
-						Pair Companion
-					</DropdownMenu.Item>
-				{/if}
-
-				<DropdownMenu.Separator class="bg-border/30" />
-				<DropdownMenu.Item
-					class="text-xs text-destructive focus:text-destructive"
-					onclick={handleDelete}
+	<div>
+		<div class="mb-4 flex items-start justify-between">
+			<div class="flex items-center gap-2">
+				<div class={cn('h-2 w-2 rounded-full transition-all duration-500', statusColor)}></div>
+				<span class="text-[10px] font-medium tracking-widest text-muted-foreground/60 uppercase"
+					>{device.status}</span
 				>
-					Delete
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+			</div>
+
+			<DropdownMenu.Root>
+				<div onclick={(e) => e.stopPropagation()}>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								variant="ghost"
+								size="icon"
+								class="-mr-2 h-8 w-8 text-muted-foreground/40 transition-colors hover:bg-transparent hover:text-foreground"
+								{...props}
+							>
+								<MoreVertical class="h-4 w-4" />
+								<span class="sr-only">Menu</span>
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+				</div>
+				<DropdownMenu.Content align="end" class="w-48 border-border/40 font-light">
+					<DropdownMenu.Item onclick={() => (isEditDialogOpen = true)} class="text-xs">
+						Edit
+					</DropdownMenu.Item>
+
+					{#if device.companion_url}
+						<DropdownMenu.Item onclick={handleUnpair} class="text-xs text-muted-foreground">
+							Unpair Companion
+						</DropdownMenu.Item>
+					{/if}
+
+					<DropdownMenu.Separator class="bg-border/30" />
+					<DropdownMenu.Item
+						class="text-xs text-destructive focus:text-destructive"
+						onclick={handleDelete}
+					>
+						Delete
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		</div>
+
+		<EditDeviceDialog bind:open={isEditDialogOpen} {device} />
+		<PairCompanionDialog bind:open={isPairDialogOpen} {device} />
+
+		<div class="mb-6 space-y-2">
+			<div>
+				<h3
+					class="truncate pr-2 text-lg font-medium tracking-tight text-foreground"
+					title={device.name}
+				>
+					{device.name}
+				</h3>
+				{#if device.description}
+					<p class="mt-1 line-clamp-2 h-8 text-xs text-muted-foreground/70">
+						{device.description}
+					</p>
+				{:else}
+					<div class="h-8"></div>
+				{/if}
+			</div>
+			<div class="flex flex-col gap-0.5 pt-1">
+				<code class="font-mono text-[10px] tracking-wide text-muted-foreground/50"
+					>{device.ip_address}</code
+				>
+				<code class="font-mono text-[10px] tracking-wide text-muted-foreground/40"
+					>{device.mac_address}</code
+				>
+			</div>
+		</div>
 	</div>
 
-	<EditDeviceDialog bind:open={isEditDialogOpen} {device} />
-	<PairCompanionDialog bind:open={isPairDialogOpen} {device} />
-
-	<div class="mb-6 space-y-3">
-		<div>
-			<h3 class="text-base font-normal tracking-tight text-foreground">{device.name}</h3>
-			{#if device.description}
-				<p class="mt-0.5 max-w-[90%] truncate text-[11px] text-muted-foreground/70">
-					{device.description}
-				</p>
-			{/if}
-		</div>
-		<div class="flex flex-col gap-0.5">
-			<code class="font-mono text-[10px] tracking-wide text-muted-foreground/40"
-				>{device.ip_address}</code
-			>
-			<code class="font-mono text-[10px] tracking-wide text-muted-foreground/30"
-				>{device.mac_address}</code
-			>
-		</div>
-	</div>
-
-	<div class="flex items-center justify-end">
+	<div
+		class="mt-auto flex flex-col gap-2 border-t border-border/20 pt-4"
+		onclick={(e) => e.stopPropagation()}
+	>
 		{#if !isOnline}
 			<Button
-				variant="ghost"
-				size="sm"
-				class="group/wake h-8 w-full gap-1.5 border px-3 text-xs font-medium text-foreground/80 transition-all duration-300 hover:bg-primary/5 hover:text-primary md:w-auto"
+				variant="outline"
+				size="default"
+				class="w-full gap-2 border-primary/20 bg-primary/5 transition-all duration-300 hover:bg-primary/10 hover:text-primary"
 				onclick={handleWake}
 			>
-				<span class="hidden md:block">Wake</span>
-				<Power class="h-3 w-3 transition-colors group-hover/wake:text-primary" />
+				<Power class="h-3.5 w-3.5" />
+				<span>Wake</span>
+			</Button>
+		{/if}
+
+		{#if isOnline && device.companion_url}
+			<!-- Mobile: Dropdown Menu -->
+			<div class="flex w-full md:hidden" transition:fade onclick={(e) => e.stopPropagation()}>
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								variant="secondary"
+								size="default"
+								class="w-full gap-2 text-muted-foreground transition-all duration-300 hover:text-foreground"
+								{...props}
+							>
+								<Power class="h-4 w-4" />
+								<span>Power Actions</span>
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="center" class="w-48 border-border/40 font-light">
+						<DropdownMenu.Item onclick={() => handleCompanionAction('sleep')} class="text-sm">
+							<Moon class="mr-2 h-4 w-4" />
+							Sleep
+						</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={() => handleCompanionAction('restart')} class="text-sm">
+							<RefreshCw class="mr-2 h-4 w-4" />
+							Restart
+						</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={() => handleCompanionAction('hibernate')} class="text-sm">
+							<Snowflake class="mr-2 h-4 w-4" />
+							Hibernate
+						</DropdownMenu.Item>
+						<DropdownMenu.Separator class="bg-border/30" />
+						<DropdownMenu.Item
+							onclick={() => handleCompanionAction('shutdown')}
+							class="text-sm text-destructive focus:text-destructive"
+						>
+							<Power class="mr-2 h-4 w-4" />
+							Shutdown
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
+
+			<!-- Desktop: Icon Buttons with Tooltips -->
+			<div class="hidden w-full items-center justify-between gap-1 md:flex" transition:fade>
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Button
+								variant="ghost"
+								size="icon"
+								class="h-10 w-10 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+								{...props}
+								onclick={() => handleCompanionAction('sleep')}
+							>
+								<Moon class="h-5 w-5" />
+								<span class="sr-only">Sleep</span>
+							</Button>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content>Sleep</Tooltip.Content>
+				</Tooltip.Root>
+
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Button
+								variant="ghost"
+								size="icon"
+								class="h-10 w-10 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+								{...props}
+								onclick={() => handleCompanionAction('restart')}
+							>
+								<RefreshCw class="h-5 w-5" />
+								<span class="sr-only">Restart</span>
+							</Button>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content>Restart</Tooltip.Content>
+				</Tooltip.Root>
+
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Button
+								variant="ghost"
+								size="icon"
+								class="h-10 w-10 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+								{...props}
+								onclick={() => handleCompanionAction('hibernate')}
+							>
+								<Snowflake class="h-5 w-5" />
+								<span class="sr-only">Hibernate</span>
+							</Button>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content>Hibernate</Tooltip.Content>
+				</Tooltip.Root>
+
+				<div class="mx-1 h-6 w-px bg-border/40"></div>
+
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Button
+								variant="ghost"
+								size="icon"
+								class="h-10 w-10 text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
+								{...props}
+								onclick={() => handleCompanionAction('shutdown')}
+							>
+								<Power class="h-5 w-5" />
+								<span class="sr-only">Shutdown</span>
+							</Button>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content>Shutdown</Tooltip.Content>
+				</Tooltip.Root>
+			</div>
+		{/if}
+
+		{#if !device.companion_url}
+			<Button
+				variant="secondary"
+				size="default"
+				class="w-full gap-2 text-muted-foreground transition-all duration-300 hover:text-foreground"
+				onclick={() => (isPairDialogOpen = true)}
+			>
+				<Link class="h-3.5 w-3.5" />
+				<span>Pair Companion</span>
 			</Button>
 		{/if}
 	</div>

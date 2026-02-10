@@ -6,6 +6,7 @@
 	import Header from '$lib/components/organisms/Header.svelte';
 	import FloatingActionButton from '$lib/components/atoms/FloatingActionButton.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { onMount } from 'svelte';
 
 	let isAddDialogOpen = $state(false);
@@ -33,33 +34,35 @@
 			</AddDeviceDialog>
 		</Header>
 
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
-			{#if deviceStore.loading && deviceStore.devices.length === 0}
-				<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-				{#each Array(3) as _, i (i)}
-					<DeviceCardSkeleton />
-				{/each}
-			{:else}
-				{#each deviceStore.devices as device (device.mac_address)}
-					<DeviceCard {device} />
-				{/each}
+		<Tooltip.Provider>
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
+				{#if deviceStore.loading && deviceStore.devices.length === 0}
+					<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+					{#each Array(3) as _, i (i)}
+						<DeviceCardSkeleton />
+					{/each}
+				{:else}
+					{#each deviceStore.devices as device (device.mac_address)}
+						<DeviceCard {device} />
+					{/each}
 
-				{#if deviceStore.devices.length === 0}
-					<!-- Empty state is less relevant now that we have the Add Card, but keeping it for mobile or if list empty -->
-					<div
-						class="col-span-full flex flex-col items-center justify-center space-y-6 py-12 text-center sm:hidden"
-					>
-						<div class="h-px w-24 bg-border/40"></div>
-						<div>
-							<p class="text-sm font-medium tracking-widest text-muted-foreground/60 uppercase">
-								No devices
-							</p>
+					{#if deviceStore.devices.length === 0}
+						<!-- Empty state is less relevant now that we have the Add Card, but keeping it for mobile or if list empty -->
+						<div
+							class="col-span-full flex flex-col items-center justify-center space-y-6 py-12 text-center sm:hidden"
+						>
+							<div class="h-px w-24 bg-border/40"></div>
+							<div>
+								<p class="text-sm font-medium tracking-widest text-muted-foreground/60 uppercase">
+									No devices
+								</p>
+							</div>
+							<div class="h-px w-24 bg-border/40"></div>
 						</div>
-						<div class="h-px w-24 bg-border/40"></div>
-					</div>
+					{/if}
 				{/if}
-			{/if}
-		</div>
+			</div>
+		</Tooltip.Provider>
 	</div>
 </div>
 
