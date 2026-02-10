@@ -6,6 +6,9 @@ export interface Device {
 	ip_address: string;
 	broadcast_ip: string; // For Wake-on-LAN
 	status: 'online' | 'offline' | 'unknown' | 'error';
+	companion_url?: string;
+	companion_token?: string;
+	companion_auth_fingerprint?: string;
 }
 
 // API Response wrapper from backend

@@ -71,6 +71,12 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 	// Device Actions:
 	handleAuth("POST "+p+"/devices/{id}/wake", a.handleDeviceWake) // wake a specific device by ID
 
+	// Companion routes
+	handleAuth("POST "+p+"/devices/{id}/companion/pair", a.handleDeviceCompanionPair)     // pair with companion
+	handleAuth("POST "+p+"/devices/{id}/companion/unpair", a.handleDeviceCompanionUnpair) // unpair from companion
+	handleAuth("POST "+p+"/devices/{id}/companion/action", a.handleDeviceCompanionAction) // send command to companion
+	handleAuth("GET "+p+"/devices/{id}/companion/status", a.handleDeviceCompanionStatus)  // get companion status
+
 	// Auth routes
 	handleAuth("GET "+p+"/auth/status", a.handleAuthStatus)             // check if the user is authenticated
 	handlePublic("POST "+p+"/auth/login", a.handleAuthLogin)            // login with username and password (optionally OTP)

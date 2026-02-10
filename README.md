@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://github.com/sean1832/wolite/blob/main/.design/favicon.svg" alt="wolite logo" width="120" height="120">
+<img src="https://github.com/sean1832/wolite/blob/main/.design/logo.svg" alt="wolite logo" width="120" height="120">
 
 # Wolite
 

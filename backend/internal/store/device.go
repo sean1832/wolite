@@ -16,6 +16,11 @@ type Device struct {
 	IPAddress   string `json:"ip_address"`            // mandatory IP address of the device
 	BroadcastIP string `json:"broadcast_ip"`          // mandatory broadcast IP (e.g., 192.168.1.255:9)
 
+	// Companion Integration
+	CompanionURL             string `json:"companion_url,omitempty"`              // e.g. https://192.168.1.50:8443
+	CompanionToken           string `json:"companion_token,omitempty"`            // Bearer token
+	CompanionAuthFingerprint string `json:"companion_auth_fingerprint,omitempty"` // SHA-256 fingerprint of the cert
+
 	Status Status `json:"status"` // current status of the device
 }
 
@@ -57,6 +62,18 @@ func (s *Store) GetDeviceByMacAddress(macAddress string) (*Device, error) {
 		return nil, ErrDeviceNotFound
 	}
 	return &device, nil
+}
+
+// GetAllDevices returns a copy of all devices in the store.
+func (s *Store) GetAllDevices() ([]Device, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	devices := make([]Device, 0, len(s.devices))
+	for _, d := range s.devices {
+		devices = append(devices, d)
+	}
+	return devices, nil
 }
 
 // UpdateDevice updates an existing device. It requires the MAC address to be unchanged.

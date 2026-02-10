@@ -5,10 +5,12 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"time"
 	"wolite/internal/api"
 	"wolite/internal/env"
 	"wolite/internal/store"
 	"wolite/internal/ui"
+	"wolite/internal/worker"
 )
 
 func main() {
@@ -20,6 +22,10 @@ func main() {
 	}
 
 	apiHandler := api.NewAPI(context.Background(), store, config)
+
+	// Start background workers
+	statusChecker := worker.NewStatusChecker(store, 30*time.Second)
+	go statusChecker.Start(context.Background())
 
 	apiHandler.RegisterRoutesV1(mux)
 

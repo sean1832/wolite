@@ -86,9 +86,9 @@ class DeviceStore {
 			// Optionally update local state to show "waking" status
 			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
 			if (index !== -1) {
-				// Note: Backend doesn't return updated device, so we manually update
-				// In a production app, you might poll for status updates
-				this.devices[index] = { ...this.devices[index] };
+				// Note: Backend doesn't return updated device, so we manually update.
+				// We also trigger a reload after a short delay to check if device came online
+				setTimeout(() => this.init(fetch), 5000);
 			}
 		} catch (err) {
 			this.error = err instanceof Error ? err.message : 'Failed to wake device';
@@ -96,6 +96,86 @@ class DeviceStore {
 			throw err;
 		} finally {
 			this.loading = false;
+		}
+	}
+
+	async pairCompanion(fetch: typeof window.fetch, macAddress: string, url: string, token: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			const device = await http.post<Device>(
+				fetch,
+				`/devices/${macAddress}/companion/pair`,
+				{ url, token }
+			);
+			// Update local device with returned data (including fingerprint)
+			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
+			if (index !== -1) {
+				this.devices[index] = device;
+			}
+			return device;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Failed to pair companion';
+			console.error('Failed to pair companion:', err);
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async unpairCompanion(fetch: typeof window.fetch, macAddress: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			const device = await http.post<Device>(
+				fetch,
+				`/devices/${macAddress}/companion/unpair`,
+				{}
+			);
+			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
+			if (index !== -1) {
+				this.devices[index] = device;
+			}
+			return device;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Failed to unpair companion';
+			console.error('Failed to unpair companion:', err);
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async companionAction(fetch: typeof window.fetch, macAddress: string, action: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			await http.post(fetch, `/devices/${macAddress}/companion/action`, { action });
+		} catch (err) {
+			this.error =
+				err instanceof Error ? err.message : `Failed to execute companion action: ${action}`;
+			console.error(`Failed to execute companion action ${action}:`, err);
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async checkDeviceStatus(fetch: typeof window.fetch, macAddress: string) {
+		// Don't set global loading state for background status checks to avoid UI flickering
+		try {
+			const updatedDevice = await http.get<Device>(
+				fetch,
+				`/devices/${macAddress}/companion/status`
+			);
+			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
+			if (index !== -1) {
+				this.devices[index] = updatedDevice;
+			}
+			return updatedDevice;
+		} catch (err) {
+			console.error(`Failed to check status for device ${macAddress}:`, err);
+			// Don't throw, just log. We don't want to break the UI for a failed background check.
 		}
 	}
 }
