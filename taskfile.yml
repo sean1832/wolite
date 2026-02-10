@@ -63,13 +63,19 @@ tasks:
   companion-gui:
     dir: companion
     cmds:
-      - cmd: go build -tags gui -ldflags="-H=windowsgui -s -w" -o ../companion/bin/companion-gui.exe .
+      - cmd: go build -tags gui -ldflags="-H=windowsgui -s -w" -o ../companion/bin/wolite-companion.exe .
+        platforms: [windows]
+      - cmd: go build -tags gui -ldflags="-s -w" -o ../companion/bin/wolite-companion .
+        platforms: [linux]
 
   # Companion App (CLI)
   companion-cli:
     dir: companion
     cmds:
-      - cmd: go build -tags cli -ldflags="-s -w" -o ../companion/bin/companion-cli.exe .
+      - cmd: go build -tags cli -ldflags="-s -w" -o ../companion/bin/wolite-companion-cli.exe .
+        platforms: [windows]
+      - cmd: go build -tags cli -ldflags="-s -w" -o ../companion/bin/wolite-companion-cli .
+        platforms: [linux, darwin]
 
   companion:
     cmds:
