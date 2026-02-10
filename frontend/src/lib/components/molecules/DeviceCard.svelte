@@ -8,10 +8,12 @@
 	import { cn } from '$lib/utils';
 
 	import EditDeviceDialog from '$lib/components/organisms/EditDeviceDialog.svelte';
+	import PairCompanionDialog from '$lib/components/organisms/PairCompanionDialog.svelte';
 
 	let { device }: { device: Device } = $props();
 
 	let isEditDialogOpen = $state(false);
+	let isPairDialogOpen = $state(false);
 
 	// Status color - minimal dot
 	let statusColor = $derived(
@@ -56,6 +58,24 @@
 			// Error is already logged in store
 		}
 	}
+
+	async function handleUnpair() {
+		const promise = deviceStore.unpairCompanion(fetch, device.mac_address);
+		toast.promise(promise, {
+			loading: 'Unpairing companion...',
+			success: 'Companion unpaired',
+			error: 'Failed to unpair companion'
+		});
+	}
+
+	async function handleCompanionAction(action: string) {
+		const promise = deviceStore.companionAction(fetch, device.mac_address, action);
+		toast.promise(promise, {
+			loading: `Sending ${action} command...`,
+			success: `Command sent to ${device.name}`,
+			error: `Failed to send ${action} command`
+		});
+	}
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -88,10 +108,42 @@
 					{/snippet}
 				</DropdownMenu.Trigger>
 			</div>
-			<DropdownMenu.Content align="end" class="w-32 border-border/40 font-light">
-				<DropdownMenu.Item onclick={() => (isEditDialogOpen = true)} class="text-xs"
-					>Edit</DropdownMenu.Item
-				>
+			<DropdownMenu.Content align="end" class="w-48 border-border/40 font-light">
+				<DropdownMenu.Item onclick={() => (isEditDialogOpen = true)} class="text-xs">
+					Edit
+				</DropdownMenu.Item>
+
+				{#if device.companion_url}
+					<DropdownMenu.Sub>
+						<DropdownMenu.SubTrigger class="text-xs">Power Actions</DropdownMenu.SubTrigger>
+						<DropdownMenu.SubContent class="w-32 border-border/40">
+							<DropdownMenu.Item onclick={() => handleCompanionAction('sleep')} class="text-xs">
+								Sleep
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={() => handleCompanionAction('restart')} class="text-xs">
+								Restart
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={() => handleCompanionAction('hibernate')} class="text-xs">
+								Hibernate
+							</DropdownMenu.Item>
+							<DropdownMenu.Separator class="bg-border/30" />
+							<DropdownMenu.Item
+								onclick={() => handleCompanionAction('shutdown')}
+								class="text-xs text-destructive focus:text-destructive"
+							>
+								Shutdown
+							</DropdownMenu.Item>
+						</DropdownMenu.SubContent>
+					</DropdownMenu.Sub>
+					<DropdownMenu.Item onclick={handleUnpair} class="text-xs text-muted-foreground">
+						Unpair Companion
+					</DropdownMenu.Item>
+				{:else}
+					<DropdownMenu.Item onclick={() => (isPairDialogOpen = true)} class="text-xs">
+						Pair Companion
+					</DropdownMenu.Item>
+				{/if}
+
 				<DropdownMenu.Separator class="bg-border/30" />
 				<DropdownMenu.Item
 					class="text-xs text-destructive focus:text-destructive"
@@ -104,6 +156,7 @@
 	</div>
 
 	<EditDeviceDialog bind:open={isEditDialogOpen} {device} />
+	<PairCompanionDialog bind:open={isPairDialogOpen} {device} />
 
 	<div class="mb-6 space-y-3">
 		<div>

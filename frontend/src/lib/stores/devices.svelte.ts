@@ -98,6 +98,68 @@ class DeviceStore {
 			this.loading = false;
 		}
 	}
+
+	async pairCompanion(fetch: typeof window.fetch, macAddress: string, url: string, token: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			const device = await http.post<Device>(
+				fetch,
+				`/devices/${macAddress}/companion/pair`,
+				{ url, token }
+			);
+			// Update local device with returned data (including fingerprint)
+			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
+			if (index !== -1) {
+				this.devices[index] = device;
+			}
+			return device;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Failed to pair companion';
+			console.error('Failed to pair companion:', err);
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async unpairCompanion(fetch: typeof window.fetch, macAddress: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			const device = await http.post<Device>(
+				fetch,
+				`/devices/${macAddress}/companion/unpair`,
+				{}
+			);
+			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
+			if (index !== -1) {
+				this.devices[index] = device;
+			}
+			return device;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Failed to unpair companion';
+			console.error('Failed to unpair companion:', err);
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async companionAction(fetch: typeof window.fetch, macAddress: string, action: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			await http.post(fetch, `/devices/${macAddress}/companion/action`, { action });
+		} catch (err) {
+			this.error =
+				err instanceof Error ? err.message : `Failed to execute companion action: ${action}`;
+			console.error(`Failed to execute companion action ${action}:`, err);
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
 }
 
 export const deviceStore = new DeviceStore();
