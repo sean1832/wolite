@@ -9,10 +9,17 @@
 	import { cn } from '$lib/utils';
 	import { fade } from 'svelte/transition';
 
+	import { onMount } from 'svelte';
 	import EditDeviceDialog from '$lib/components/organisms/EditDeviceDialog.svelte';
 	import PairCompanionDialog from '$lib/components/organisms/PairCompanionDialog.svelte';
 
 	let { device }: { device: Device } = $props();
+
+	onMount(() => {
+		if (device.companion_url) {
+			deviceStore.checkDeviceStatus(window.fetch, device.mac_address);
+		}
+	});
 
 	let isEditDialogOpen = $state(false);
 	let isPairDialogOpen = $state(false);

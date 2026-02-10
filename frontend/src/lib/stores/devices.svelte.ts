@@ -160,6 +160,24 @@ class DeviceStore {
 			this.loading = false;
 		}
 	}
+
+	async checkDeviceStatus(fetch: typeof window.fetch, macAddress: string) {
+		// Don't set global loading state for background status checks to avoid UI flickering
+		try {
+			const updatedDevice = await http.get<Device>(
+				fetch,
+				`/devices/${macAddress}/companion/status`
+			);
+			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
+			if (index !== -1) {
+				this.devices[index] = updatedDevice;
+			}
+			return updatedDevice;
+		} catch (err) {
+			console.error(`Failed to check status for device ${macAddress}:`, err);
+			// Don't throw, just log. We don't want to break the UI for a failed background check.
+		}
+	}
 }
 
 export const deviceStore = new DeviceStore();

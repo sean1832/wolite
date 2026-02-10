@@ -1,9 +1,11 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 	"wolite/internal/companion"
 	"wolite/internal/store"
 )
@@ -15,6 +17,72 @@ type pairCompanionRequest struct {
 
 type companionActionRequest struct {
 	Action string `json:"action"` // shutdown, reboot, sleep, hibernate
+}
+
+// handleDeviceCompanionStatus checks if the companion is reachable.
+func (a *API) handleDeviceCompanionStatus(w http.ResponseWriter, r *http.Request) {
+	claims := GetUserFromContext(r.Context())
+	if claims == nil {
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		return
+	}
+
+	id := r.PathValue("id")
+	if id == "" {
+		writeRespErr(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	device, err := a.store.GetDeviceForUser(claims.Username, id)
+	if err != nil {
+		if err == store.ErrDeviceNotFound {
+			writeRespErr(w, "Device not found", http.StatusNotFound)
+		} else {
+			writeRespErr(w, "Failed to retrieve device", http.StatusInternalServerError)
+		}
+		slog.Warn("failed to retrieve device for status check", "id", id, "error", err)
+		return
+	}
+
+	if device.CompanionURL == "" || device.CompanionToken == "" {
+		// unpaired, unknown status
+		device.Status = store.StatusUnknown
+		if err := a.store.UpdateDevice(device); err != nil {
+			slog.Error("failed to update device status", "id", id, "error", err)
+		}
+		writeRespOk(w, "Companion not paired", device)
+		return
+	}
+
+	client, err := companion.NewClient(device.CompanionURL, device.CompanionToken, device.CompanionAuthFingerprint)
+	if err != nil {
+		writeRespErr(w, "Invalid companion configuration", http.StatusInternalServerError)
+		slog.Error("failed to create client", "url", device.CompanionURL, "error", err)
+		return
+	}
+
+	// shorter timeout for explicit user check
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	err = client.Ping(ctx)
+	newStatus := store.StatusOnline
+	if err != nil {
+		slog.Warn("failed to ping companion", "url", device.CompanionURL, "error", err)
+		newStatus = store.StatusOffline
+	}
+
+	if device.Status != newStatus {
+		device.Status = newStatus
+		if err := a.store.UpdateDevice(device); err != nil {
+			writeRespErr(w, "Failed to update device", http.StatusInternalServerError)
+			slog.Error("failed to update device", "id", id, "error", err)
+			return
+		}
+	}
+
+	writeRespOk(w, "Device status updated", device)
 }
 
 // handleDeviceCompanionPair pairs a device with a companion app.
