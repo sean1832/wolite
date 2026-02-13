@@ -25,21 +25,25 @@ func main() {
 }
 
 func onReady() {
-	slog.Info("Setting icon", "size", len(iconData))
 	systray.SetIcon(iconData)
 	systray.SetTitle("Wolite Companion")
 	systray.SetTooltip("Wake on Lan client side monitoring tool")
 
 	mRegen := systray.AddMenuItem("Generate Token", "Generate a new authentication token")
+	mConfig := systray.AddMenuItem("Configure", "Configure the app")
+	systray.AddSeparator()
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
-
-	// Sets the icon of a menu item. Only available on Mac and Windows.
-	mQuit.SetIcon(iconData)
 
 	// Initialize App
 	tokenStore, certPath, keyPath, err := Initialize()
 	if err != nil {
 		slog.Error("Failed to Initialize app", "error", err)
+		systray.Quit()
+		return
+	}
+	configStore, err := InitializeConfig(8081)
+	if err != nil {
+		slog.Error("Failed to Initialize config", "error", err)
 		systray.Quit()
 		return
 	}
@@ -49,7 +53,7 @@ func onReady() {
 
 	// Start the server in a goroutine
 	go func() {
-		if err := StartServer(tokenStore, certPath, keyPath); err != nil {
+		if err := StartServer(tokenStore, certPath, keyPath, configStore.GetPort()); err != nil {
 			slog.Error("Server crashed", "error", err)
 			systray.Quit()
 		}
@@ -69,6 +73,11 @@ func onReady() {
 					if err := openFileInEditor(tokenStore.GetTempTokenPath()); err != nil {
 						slog.Error("Failed to open token file", "error", err)
 					}
+				}
+			case <-mConfig.ClickedCh:
+				// Open the config file in the default text editor
+				if err := openFileInEditor(configStore.GetConfigPath()); err != nil {
+					slog.Error("Failed to open config file", "error", err)
 				}
 			case <-mQuit.ClickedCh:
 				systray.Quit()

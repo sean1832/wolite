@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -27,21 +28,37 @@ func main() {
 		return
 	}
 
-	defer onExit()
-
 	// Normal run mode
 	tokenStore, certPath, keyPath, err := Initialize()
 	if err != nil {
 		log.Fatalf("Failed to Initialize app: %v", err)
 	}
+	defer onExit()
 
 	// Store globally for cleanup
 	globalTokenStore = tokenStore
 
+	// flags
+	// -p --port
+	defaultPort := 8081
+	apiPort := flag.Int("port", defaultPort, "Port to run the server on")
+	flag.IntVar(apiPort, "p", defaultPort, "Port to run the server on (shorthand)")
+
+	var showHelp bool
+	flag.BoolVar(&showHelp, "help", false, "Show this help message")
+	flag.BoolVar(&showHelp, "h", false, "Show this help message (shorthand)")
+
+	flag.Parse()
+
+	if showHelp {
+		printHelp()
+		return
+	}
+
 	// Create a channel for errors from StartServer
 	errChan := make(chan error, 1)
 	go func() {
-		if err := StartServer(tokenStore, certPath, keyPath); err != nil {
+		if err := StartServer(tokenStore, certPath, keyPath, *apiPort); err != nil {
 			errChan <- err
 		}
 	}()
@@ -56,6 +73,16 @@ func main() {
 		// Triggered by App Failure.
 		log.Printf("Application crashed: %v", err)
 	}
+}
+
+func printHelp() bool {
+	println("Usage: wolite-companion-cli [options]")
+	println("Commands:")
+	println("  regen-token        Generate a new authentication token")
+	println("Options:")
+	println("  -p, --port <port>  Port to run the server on")
+	println("  -h, --help         Show this help message")
+	return true
 }
 
 // onExit is called when the CLI app is exiting.
