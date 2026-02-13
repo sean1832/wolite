@@ -5,10 +5,6 @@ package main
 import (
 	_ "embed"
 	"log/slog"
-	"os/exec"
-	"runtime"
-	"syscall"
-	"unsafe"
 	"wolcompanion/internal/auth"
 
 	"github.com/getlantern/systray"
@@ -85,41 +81,6 @@ func onReady() {
 			}
 		}
 	}()
-}
-
-// openFileInEditor opens the given file in the system's default text editor.
-func openFileInEditor(path string) error {
-	switch runtime.GOOS {
-	case "windows":
-		// Use ShellExecuteW to open the file with the default associated application.
-		// This avoids spawning a cmd.exe window.
-		shell32 := syscall.NewLazyDLL("shell32.dll")
-		proc := shell32.NewProc("ShellExecuteW")
-
-		verb, _ := syscall.UTF16PtrFromString("open")
-		file, _ := syscall.UTF16PtrFromString(path)
-
-		// ShellExecuteW(hwnd, lpOperation, lpFile, lpParameters, lpDirectory, nShowCmd)
-		ret, _, err := proc.Call(
-			0,
-			uintptr(unsafe.Pointer(verb)),
-			uintptr(unsafe.Pointer(file)),
-			0,
-			0,
-			1, // SW_SHOWNORMAL
-		)
-
-		// ShellExecute returns a value > 32 on success.
-		if ret <= 32 {
-			return err
-		}
-		return nil
-
-	case "darwin":
-		return exec.Command("open", path).Start()
-	default:
-		return exec.Command("xdg-open", path).Start()
-	}
 }
 
 // onExit is called when the systray app is exiting.
