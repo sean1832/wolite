@@ -21,8 +21,8 @@ func PrepareShutdown(delaySeconds int) (func() error, error) {
 		if _, err := exec.LookPath("shutdown"); err != nil {
 			return nil, fmt.Errorf("shutdown executable not found")
 		}
-		// /s = shutdown, /t 0 = immediate (we handle delay in Go)
-		cmd = exec.Command("shutdown", "/s", "/t", "0")
+		// /s = shutdown, /t 0 = immediate, /f = force
+		cmd = exec.Command("shutdown", "/s", "/f", "/t", "0")
 	case "linux", "darwin":
 		if _, err := exec.LookPath("shutdown"); err != nil {
 			return nil, fmt.Errorf("shutdown executable not found")
@@ -50,7 +50,7 @@ func PrepareReboot(delaySeconds int) (func() error, error) {
 			return nil, fmt.Errorf("shutdown executable not found")
 		}
 		// /r = reboot
-		cmd = exec.Command("shutdown", "/r", "/t", "0")
+		cmd = exec.Command("shutdown", "/r", "/f", "/t", "0")
 	case "linux", "darwin":
 		// 'reboot' is standard, but good to check
 		if _, err := exec.LookPath("reboot"); err != nil {
