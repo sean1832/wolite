@@ -13,6 +13,12 @@
 	let token = $state('');
 	let isLoading = $state(false);
 
+	$effect(() => {
+		if (device.ip_address) {
+			url = `https://${device.ip_address}:8443`;
+		}
+	});
+
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		isLoading = true;

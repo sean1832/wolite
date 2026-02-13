@@ -37,7 +37,7 @@ func onReady() {
 		systray.Quit()
 		return
 	}
-	configStore, err := InitializeConfig(8081)
+	configStore, err := InitializeConfig(8443)
 	if err != nil {
 		slog.Error("Failed to Initialize config", "error", err)
 		systray.Quit()
