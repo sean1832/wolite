@@ -22,6 +22,8 @@ type Device struct {
 	CompanionAuthFingerprint string `json:"companion_auth_fingerprint,omitempty"` // SHA-256 fingerprint of the cert
 
 	Status Status `json:"status"` // current status of the device
+
+	Order int `json:"order"` // display order of the device
 }
 
 func NewDevice(macAddress, name, description, ipAddress, broadcastIP string, status Status) *Device {
@@ -109,6 +111,22 @@ func (s *Store) DeleteDevice(macAddress string) error {
 	// Clean up: Remove from all user mappings to ensure consistency
 	for _, mappings := range s.userDeviceMappings {
 		delete(mappings, macAddress)
+	}
+
+	// Persistence: Flush to disk
+	return s.flush()
+}
+
+// ReorderDevices updates the order of devices based on the provided list of MAC addresses.
+func (s *Store) ReorderDevices(macAddresses []string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for i, mac := range macAddresses {
+		if device, exists := s.devices[mac]; exists {
+			device.Order = i
+			s.devices[mac] = device
+		}
 	}
 
 	// Persistence: Flush to disk

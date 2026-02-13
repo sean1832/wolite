@@ -62,11 +62,12 @@ func (a *API) RegisterRoutesV1(mux *http.ServeMux) {
 	handleAuth("POST "+p+"/users/otp/verify", a.handleUserOTPVerify) // verify and enable OTP
 
 	// Device routes
-	handleAuth("GET "+p+"/devices", a.handleDevicesGetAll)        // list all devices the user has access to
-	handleAuth("POST "+p+"/devices", a.handleDeviceCreate)        // create a new device to the user's account
-	handleAuth("GET "+p+"/devices/{id}", a.handleDeviceGet)       // get a specific device by ID
-	handleAuth("PUT "+p+"/devices/{id}", a.handleDeviceUpdate)    // update a specific device by ID
-	handleAuth("DELETE "+p+"/devices/{id}", a.handleDeviceDelete) // delete a specific device by ID
+	handleAuth("GET "+p+"/devices", a.handleDevicesGetAll)          // list all devices the user has access to
+	handleAuth("POST "+p+"/devices", a.handleDeviceCreate)          // create a new device to the user's account
+	handleAuth("GET "+p+"/devices/{id}", a.handleDeviceGet)         // get a specific device by ID
+	handleAuth("PUT "+p+"/devices/{id}", a.handleDeviceUpdate)      // update a specific device by ID
+	handleAuth("DELETE "+p+"/devices/{id}", a.handleDeviceDelete)   // delete a specific device by ID
+	handleAuth("PUT "+p+"/devices/reorder", a.handleDevicesReorder) // reorder devices
 
 	// Device Actions:
 	handleAuth("POST "+p+"/devices/{id}/wake", a.handleDeviceWake) // wake a specific device by ID

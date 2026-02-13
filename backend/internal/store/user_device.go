@@ -1,5 +1,7 @@
 package store
 
+import "sort"
+
 type UserDeviceMapping struct {
 	Username   string `json:"username"`
 	MACAddress string `json:"mac_address"`
@@ -22,7 +24,19 @@ func (s *Store) GetDevicesForUser(username string) ([]Device, error) {
 		}
 	}
 
+	sortDevices(devices)
+
 	return devices, nil
+}
+
+// sort devices by Order, then Name
+func sortDevices(devices []Device) {
+	sort.Slice(devices, func(i, j int) bool {
+		if devices[i].Order != devices[j].Order {
+			return devices[i].Order < devices[j].Order
+		}
+		return devices[i].Name < devices[j].Name
+	})
 }
 
 // AddDeviceToUser adds a new device to a user only if the mapping does not exist.
