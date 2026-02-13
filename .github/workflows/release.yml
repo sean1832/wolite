@@ -112,6 +112,45 @@ jobs:
           echo "Build complete. Artifacts:"
           ls -l artifacts/
 
+      # --- 3. Build Companion App (GUI) ---
+      - name: Build Companion App
+        run: |
+          # Install dependencies for Linux build
+          sudo apt-get update
+          sudo apt-get install -y gcc libgtk-3-dev libayatana-appindicator3-dev
+
+          cd companion
+
+          # Linux Build
+          echo "Building Companion for Linux..."
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -tags gui -ldflags="-s -w" -o "../bin/wolite-companion-linux-amd64" .
+          
+          # Windows Build (Cross-compile)
+          # Assuming CGO_ENABLED=0 works for systray on Windows (common for Go system calls)
+          echo "Building Companion for Windows..."
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags gui -ldflags="-H=windowsgui -s -w" -o "../bin/wolite-companion-windows-amd64.exe" .
+
+          # Linux CLI Build
+          echo "Building Companion CLI for Linux..."
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags cli -ldflags="-s -w" -o "../bin/wolite-companion-cli-linux-amd64" .
+
+          # Windows CLI Build
+          echo "Building Companion CLI for Windows..."
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags cli -ldflags="-s -w" -o "../bin/wolite-companion-cli-windows-amd64.exe" .
+
+          cd ..
+          
+          # Package Companion Binaries
+          tar -czf "artifacts/wolite-companion-${TAG_NAME}-linux-amd64.tar.gz" -C bin "wolite-companion-linux-amd64"
+          zip -j "artifacts/wolite-companion-${TAG_NAME}-windows-amd64.zip" "bin/wolite-companion-windows-amd64.exe"
+
+          # Package Companion CLI Binaries
+          tar -czf "artifacts/wolite-companion-cli-${TAG_NAME}-linux-amd64.tar.gz" -C bin "wolite-companion-cli-linux-amd64"
+          zip -j "artifacts/wolite-companion-cli-${TAG_NAME}-windows-amd64.zip" "bin/wolite-companion-cli-windows-amd64.exe"
+
+          echo "Companion Build complete. Artifacts:"
+          ls -l artifacts/
+
       # --- 3. Upload Binaries to GitHub Release ---
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
