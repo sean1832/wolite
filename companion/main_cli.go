@@ -40,7 +40,7 @@ func main() {
 
 	// flags
 	// -p --port
-	defaultPort := 8081
+	defaultPort := 8443
 	apiPort := flag.Int("port", defaultPort, "Port to run the server on")
 	flag.IntVar(apiPort, "p", defaultPort, "Port to run the server on (shorthand)")
 
