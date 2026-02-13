@@ -279,3 +279,29 @@ func (a *API) handleDeviceWake(w http.ResponseWriter, r *http.Request) {
 	writeRespOk(w, "wake command sent", nil)
 	slog.Info("wake command sent to device", "username", claims.Username, "device", device)
 }
+
+func (a *API) handleDevicesReorder(w http.ResponseWriter, r *http.Request) {
+	claims := GetUserFromContext(r.Context())
+	if claims == nil {
+		slog.Error("claims missing from context", "path", r.URL.Path)
+		writeRespErr(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	var macAddresses []string
+	if err := json.NewDecoder(r.Body).Decode(&macAddresses); err != nil {
+		writeRespErr(w, "Invalid request body", http.StatusBadRequest)
+		slog.Error("invalid request body", "username", claims.Username, "error", err)
+		return
+	}
+
+	err := a.store.ReorderDevices(macAddresses)
+	if err != nil {
+		writeRespErr(w, "Failed to reorder devices", http.StatusInternalServerError)
+		slog.Error("failed to reorder devices", "username", claims.Username, "error", err)
+		return
+	}
+
+	writeRespOk(w, "devices reordered", nil)
+	slog.Info("devices reordered", "username", claims.Username, "count", len(macAddresses))
+}

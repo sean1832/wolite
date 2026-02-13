@@ -9,6 +9,7 @@ export interface Device {
 	companion_url?: string;
 	companion_token?: string;
 	companion_auth_fingerprint?: string;
+	order?: number;
 }
 
 // API Response wrapper from backend

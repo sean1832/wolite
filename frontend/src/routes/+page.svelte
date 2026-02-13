@@ -8,6 +8,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { onMount } from 'svelte';
+	import { cn } from '$lib/utils'; // Import cn
 
 	let isAddDialogOpen = $state(false);
 
@@ -42,8 +43,40 @@
 						<DeviceCardSkeleton />
 					{/each}
 				{:else}
-					{#each deviceStore.devices as device (device.mac_address)}
-						<DeviceCard {device} />
+					{#each deviceStore.devices as device, index (device.mac_address)}
+						<DeviceCard
+							{device}
+							ondragstart={(e: DragEvent) => {
+								e.dataTransfer?.setData('text/plain', index.toString());
+								e.dataTransfer!.effectAllowed = 'move';
+							}}
+							ondragover={(e: DragEvent) => {
+								e.preventDefault(); // Allow drop
+								e.dataTransfer!.dropEffect = 'move';
+							}}
+							ondrop={(e: DragEvent) => {
+								e.preventDefault();
+								const fromIndexStr = e.dataTransfer!.getData('text/plain');
+								if (!fromIndexStr) return;
+								const fromIndex = parseInt(fromIndexStr);
+								const toIndex = index;
+
+								if (fromIndex === toIndex) return;
+
+								const newOrder = [...deviceStore.devices];
+								const [moved] = newOrder.splice(fromIndex, 1);
+								newOrder.splice(toIndex, 0, moved);
+
+								// Extract MACs for API
+								const newOrderMacs = newOrder.map((d) => d.mac_address);
+								deviceStore.reorderDevices(fetch, newOrderMacs);
+							}}
+							class={cn(
+								'cursor-default',
+								'transition-opacity',
+								deviceStore.loading ? 'opacity-50' : ''
+							)}
+						/>
 					{/each}
 
 					{#if deviceStore.devices.length === 0}

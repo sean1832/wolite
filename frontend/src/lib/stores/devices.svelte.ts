@@ -1,3 +1,4 @@
+import { SvelteMap } from 'svelte/reactivity';
 import { type Device } from '$lib/types';
 import { http } from '$lib/api';
 
@@ -103,11 +104,10 @@ class DeviceStore {
 		this.loading = true;
 		this.error = null;
 		try {
-			const device = await http.post<Device>(
-				fetch,
-				`/devices/${macAddress}/companion/pair`,
-				{ url, token }
-			);
+			const device = await http.post<Device>(fetch, `/devices/${macAddress}/companion/pair`, {
+				url,
+				token
+			});
 			// Update local device with returned data (including fingerprint)
 			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
 			if (index !== -1) {
@@ -127,11 +127,7 @@ class DeviceStore {
 		this.loading = true;
 		this.error = null;
 		try {
-			const device = await http.post<Device>(
-				fetch,
-				`/devices/${macAddress}/companion/unpair`,
-				{}
-			);
+			const device = await http.post<Device>(fetch, `/devices/${macAddress}/companion/unpair`, {});
 			const index = this.devices.findIndex((d) => d.mac_address === macAddress);
 			if (index !== -1) {
 				this.devices[index] = device;
@@ -176,6 +172,38 @@ class DeviceStore {
 		} catch (err) {
 			console.error(`Failed to check status for device ${macAddress}:`, err);
 			// Don't throw, just log. We don't want to break the UI for a failed background check.
+		}
+	}
+
+	async reorderDevices(fetch: typeof window.fetch, newOrder: string[]) {
+		// Optimistic update
+		const oldDevices = [...this.devices];
+		const deviceMap = new SvelteMap(this.devices.map((d) => [d.mac_address, d]));
+
+		const reordered: Device[] = [];
+		// Add devices in the new order
+		for (const mac of newOrder) {
+			const d = deviceMap.get(mac);
+			if (d) {
+				reordered.push({ ...d, order: reordered.length });
+				deviceMap.delete(mac);
+			}
+		}
+		// Append any remaining devices (shouldn't happen usually)
+		for (const d of deviceMap.values()) {
+			reordered.push(d);
+		}
+
+		this.devices = reordered;
+
+		try {
+			await http.put(fetch, '/devices/reorder', newOrder);
+		} catch (err) {
+			console.error('Failed to reorder devices:', err);
+			this.error = 'Failed to save new order';
+			// Revert on error
+			this.devices = oldDevices;
+			throw err;
 		}
 	}
 }
