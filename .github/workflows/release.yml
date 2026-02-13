@@ -52,10 +52,18 @@ jobs:
           go-version: "1.25" # Using latest stable Go version
           cache-dependency-path: backend/go.sum
 
+      - name: Set TAG_NAME
+        id: tag
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          if [ -z "$TAG_NAME" ]; then TAG_NAME="latest"; fi
+          echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Build and Package Binaries
-        id: build
         run: |
           mkdir -p artifacts bin
+
+          TAG_NAME="${{ steps.tag.outputs.TAG_NAME }}"
 
           # Define platforms to build for
           # Format: GOOS/GOARCH
@@ -66,12 +74,6 @@ jobs:
             "darwin/amd64"
             "darwin/arm64"
           )
-
-          TAG_NAME="${{ github.event.release.tag_name }}"
-          # Fallback if tag is empty (shouldn't happen on release event)
-          if [ -z "$TAG_NAME" ]; then
-            TAG_NAME="latest"
-          fi
 
           for platform in "${platforms[@]}"; do
             GOOS=${platform%/*}
@@ -112,46 +114,69 @@ jobs:
           echo "Build complete. Artifacts:"
           ls -l artifacts/
 
-      # --- 3. Build Companion App (GUI) ---
-      - name: Build Companion App
+      # --- 3. Build Companion App ---
+      - name: Install Companion GUI Dependencies
         run: |
-          # Install dependencies for Linux build
           sudo apt-get update
           sudo apt-get install -y gcc libgtk-3-dev libayatana-appindicator3-dev
 
-          cd companion
+      - name: Build and Package Companion
+        run: |
+          TAG_NAME="${{ steps.tag.outputs.TAG_NAME }}"
 
-          # Linux Build
-          echo "Building Companion for Linux..."
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -tags gui -ldflags="-s -w" -o "../bin/wolite-companion-linux-amd64" .
-          
-          # Windows Build (Cross-compile)
-          # Assuming CGO_ENABLED=0 works for systray on Windows (common for Go system calls)
-          echo "Building Companion for Windows..."
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags gui -ldflags="-H=windowsgui -s -w" -o "../bin/wolite-companion-windows-amd64.exe" .
+          # Define companion build targets
+          # Format: BUILD_TAG/GOOS/GOARCH/CGO_ENABLED/EXTRA_LDFLAGS
+          targets=(
+            "gui/linux/amd64/1/"
+            "gui/windows/amd64/0/-H=windowsgui"
+            "cli/linux/amd64/0/"
+            "cli/windows/amd64/0/"
+          )
 
-          # Linux CLI Build
-          echo "Building Companion CLI for Linux..."
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags cli -ldflags="-s -w" -o "../bin/wolite-companion-cli-linux-amd64" .
+          for target in "${targets[@]}"; do
+            IFS='/' read -r BUILD_TAG GOOS GOARCH CGO_ENABLED EXTRA_LDFLAGS <<< "$target"
 
-          # Windows CLI Build
-          echo "Building Companion CLI for Windows..."
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags cli -ldflags="-s -w" -o "../bin/wolite-companion-cli-windows-amd64.exe" .
+            BINARY_NAME="wolite-companion"
+            # Append build tag suffix for non-gui builds (cli -> wolite-companion-cli)
+            if [ "$BUILD_TAG" != "gui" ]; then
+              BINARY_NAME="${BINARY_NAME}-${BUILD_TAG}"
+            fi
 
-          cd ..
-          
-          # Package Companion Binaries
-          tar -czf "artifacts/wolite-companion-${TAG_NAME}-linux-amd64.tar.gz" -C bin "wolite-companion-linux-amd64"
-          zip -j "artifacts/wolite-companion-${TAG_NAME}-windows-amd64.zip" "bin/wolite-companion-windows-amd64.exe"
+            # Format: wolite-companion[-variant]-<tag>-<os>-<arch>
+            OUTPUT_NAME="${BINARY_NAME}-${TAG_NAME}-${GOOS}-${GOARCH}"
+            ARCHIVE_EXT=".tar.gz"
 
-          # Package Companion CLI Binaries
-          tar -czf "artifacts/wolite-companion-cli-${TAG_NAME}-linux-amd64.tar.gz" -C bin "wolite-companion-cli-linux-amd64"
-          zip -j "artifacts/wolite-companion-cli-${TAG_NAME}-windows-amd64.zip" "bin/wolite-companion-cli-windows-amd64.exe"
+            if [ "$GOOS" = "windows" ]; then
+              BINARY_NAME="${BINARY_NAME}.exe"
+              ARCHIVE_EXT=".zip"
+            fi
 
-          echo "Companion Build complete. Artifacts:"
+            LDFLAGS="-s -w"
+            if [ -n "$EXTRA_LDFLAGS" ]; then
+              LDFLAGS="${EXTRA_LDFLAGS} ${LDFLAGS}"
+            fi
+
+            echo "Building Companion (${BUILD_TAG}) for ${GOOS}/${GOARCH}..."
+
+            cd companion
+            GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=$CGO_ENABLED \
+              go build -tags "$BUILD_TAG" -ldflags="$LDFLAGS" -o "../bin/${BINARY_NAME}" .
+            cd ..
+
+            # Package the binary
+            if [ "$GOOS" = "windows" ]; then
+              zip -j "artifacts/${OUTPUT_NAME}${ARCHIVE_EXT}" "bin/${BINARY_NAME}"
+            else
+              tar -czf "artifacts/${OUTPUT_NAME}${ARCHIVE_EXT}" -C bin "${BINARY_NAME}"
+            fi
+
+            rm -rf bin/*
+          done
+
+          echo "Companion build complete. Artifacts:"
           ls -l artifacts/
 
-      # --- 3. Upload Binaries to GitHub Release ---
+      # --- 4. Upload Binaries to GitHub Release ---
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         with:
@@ -159,7 +184,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # --- 4. Docker Build & Publish ---
+      # --- 5. Docker Build & Publish ---
       # We use the existing Dockerfile, which is multi-stage.
       # To be ultra-efficient, we could build a minimal scratch image from the linux/amd64 binary we just built,
       # but using the Dockerfile ensures the image is exactly as defined in the repo source.
@@ -190,22 +215,21 @@ jobs:
           # Also build for arm64 if possible (QEMU handles this)
           platforms: linux/amd64,linux/arm64
 
-      # --- 5. Save and Upload Docker Image (Tarball) ---
+      # --- 6. Save and Upload Docker Image (Tarball) ---
       # This step creates a standalone tarball of the Docker image for manual loading.
       # We pull the image we just pushed to avoid rebuilding.
 
       - name: Save Docker Image
         run: |
-          TAG_NAME="${{ github.event.release.tag_name }}"
-          if [ -z "$TAG_NAME" ]; then TAG_NAME="latest"; fi
+          TAG_NAME="${{ steps.tag.outputs.TAG_NAME }}"
 
           # Pull the image we just pushed and save it
           docker pull ${{ secrets.DOCKER_USERNAME }}/wolite:${TAG_NAME}
-          docker save ${{ secrets.DOCKER_USERNAME }}/wolite:${TAG_NAME} | gzip > "wolite-docker-${TAG_NAME}.tar.gz"
+          docker save ${{ secrets.DOCKER_USERNAME }}/wolite:${TAG_NAME} | gzip > "artifacts/wolite-${TAG_NAME}-docker.tar.gz"
 
       - name: Upload Docker Image to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: wolite-docker-*.tar.gz
+          files: artifacts/wolite-*-docker.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
