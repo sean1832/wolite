@@ -43,9 +43,9 @@ tasks:
   backend-debug:
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - cmd: go build -o bin/{{.BINARY_NAME}} main.go
+      - cmd: go build -o ../bin/{{.BINARY_NAME}} main.go
         platforms: [linux, darwin]
-      - cmd: go build -o bin/{{.BINARY_NAME}}.exe main.go
+      - cmd: go build -o ../bin/{{.BINARY_NAME}}.exe main.go
         platforms: [windows]
 
   # Build Go backend (Production - Optimized)
@@ -54,27 +54,27 @@ tasks:
     env:
       CGO_ENABLED: "0"
     cmds:
-      - cmd: go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}} main.go
+      - cmd: go build -ldflags="-s -w" -trimpath -o ../bin/{{.BINARY_NAME}} main.go
         platforms: [linux, darwin]
-      - cmd: go build -ldflags="-s -w" -trimpath -o bin/{{.BINARY_NAME}}.exe main.go
+      - cmd: go build -ldflags="-s -w" -trimpath -o ../bin/{{.BINARY_NAME}}.exe main.go
         platforms: [windows]
 
   # Companion App (GUI)
   companion-gui:
     dir: companion
     cmds:
-      - cmd: go build -tags gui -ldflags="-H=windowsgui -s -w" -o ../companion/bin/wolite-companion.exe .
+      - cmd: go build -tags gui -ldflags="-H=windowsgui -s -w" -o ../bin/wolite-companion.exe .
         platforms: [windows]
-      - cmd: go build -tags gui -ldflags="-s -w" -o ../companion/bin/wolite-companion .
+      - cmd: go build -tags gui -ldflags="-s -w" -o ../bin/wolite-companion .
         platforms: [linux]
 
   # Companion App (CLI)
   companion-cli:
     dir: companion
     cmds:
-      - cmd: go build -tags cli -ldflags="-s -w" -o ../companion/bin/wolite-companion-cli.exe .
+      - cmd: go build -tags cli -ldflags="-s -w" -o ../bin/wolite-companion-cli.exe .
         platforms: [windows]
-      - cmd: go build -tags cli -ldflags="-s -w" -o ../companion/bin/wolite-companion-cli .
+      - cmd: go build -tags cli -ldflags="-s -w" -o ../bin/wolite-companion-cli .
         platforms: [linux, darwin]
 
   companion:
@@ -91,6 +91,6 @@ tasks:
   clean:
     cmds:
       - rm -rf {{.UI_DIST_DIR}}
-      - rm -rf {{.BACKEND_DIR}}/bin/{{.BINARY_NAME}}
+      - rm -rf bin
       - rm -rf {{.FRONTEND_DIR}}/build
     ignore_error: true
